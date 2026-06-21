@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#FFF5F2" />
-<title>Closer — a question wheel for two</title>
+<title>Closer — a question wheel & game night for two</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -17,6 +17,8 @@
     --card-bg: #ffffff;
     --accent: #E8455F;
     --accent-2: #F4789B;
+    --p1: #E8455F;
+    --p2: #3F8EDC;
     --shadow: 0 18px 40px -12px rgba(120, 50, 70, 0.35);
     --shadow-sm: 0 6px 18px -8px rgba(120, 50, 70, 0.4);
     --font-display: "Quicksand", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -25,7 +27,6 @@
   }
 
   * { box-sizing: border-box; }
-
   html, body { height: 100%; }
 
   body {
@@ -41,16 +42,15 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* ---------- Header ---------- */
-  header {
-    text-align: center;
-    max-width: 460px;
-    margin-bottom: clamp(10px, 3vw, 22px);
-  }
+  /* ---------- Screens / router ---------- */
+  .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 560px; }
+  .screen.active { display: flex; }
+
+  header { text-align: center; max-width: 460px; margin-bottom: clamp(10px, 3vw, 22px); }
   header h1 {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(1.6rem, 6vw, 2.2rem);
+    font-size: clamp(1.9rem, 8vw, 2.6rem);
     margin: 0 0 6px;
     letter-spacing: -0.5px;
     background: linear-gradient(90deg, var(--accent), #B084CC);
@@ -58,333 +58,306 @@
     background-clip: text;
     color: transparent;
   }
-  header p {
-    margin: 0;
-    color: var(--ink-soft);
-    font-size: clamp(0.92rem, 3.4vw, 1.02rem);
-    line-height: 1.45;
-  }
+  header p { margin: 0; color: var(--ink-soft); font-size: clamp(0.92rem, 3.4vw, 1.02rem); line-height: 1.45; }
 
-  /* ---------- Wheel ---------- */
-  .stage {
-    position: relative;
-    width: min(92vw, 460px);
-    aspect-ratio: 1;
-    margin: 10px auto 0;
-    display: grid;
-    place-items: center;
-    filter: drop-shadow(0 26px 40px rgba(120, 50, 70, 0.28));
-  }
-  .pointer {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 4;
-    filter: drop-shadow(0 5px 6px rgba(120, 40, 60, 0.4));
-    pointer-events: none;
-  }
-  .wheel-wrap {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    /* glossy outer ring */
-    background:
-      radial-gradient(circle at 50% 50%, transparent 0 86%, rgba(255,255,255,0.9) 86% 100%),
-      conic-gradient(from 0deg, #fff, #ffe7ef, #fff, #f6e0ff, #fff, #ffe7ef, #fff);
-    padding: clamp(10px, 2.6vw, 15px);
-    box-shadow:
-      inset 0 0 0 2px rgba(255,255,255,0.9),
-      inset 0 -6px 14px rgba(150, 70, 95, 0.18),
-      0 2px 4px rgba(255,255,255,0.8);
-  }
-  svg.wheel {
-    width: 100%;
-    height: 100%;
-    display: block;
-    border-radius: 50%;
-    box-shadow: inset 0 0 22px rgba(80, 30, 50, 0.25);
-  }
-  svg.wheel #rotor {
-    transform-box: fill-box;
-    transform-origin: center;
-    will-change: transform;       /* promote to its own layer for a smoother spin */
-  }
-  /* Each label counter-rotates about its own center so it stays upright
-     no matter where the wheel stops — never sideways, never upside down. */
-  svg.wheel .lbl {
-    transform-box: fill-box;
-    transform-origin: center;
-    will-change: transform;
-  }
-  .seg-emoji {
-    font-size: 20px;
-    text-anchor: middle;
-    dominant-baseline: central;
-    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
-  }
-  .seg-label {
-    font-family: var(--font-display);
-    font-weight: 700;
-    fill: #fff;
-    text-anchor: middle;
-    letter-spacing: 0.2px;
-    text-shadow: 0 1px 2px rgba(60,20,35,0.45), 0 0 2px rgba(60,20,35,0.35);
-  }
-  .hub {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 19%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(circle at 36% 30%, #ffffff, #ffd9e6 70%, #ffc2d6 100%);
-    box-shadow:
-      0 6px 14px rgba(150, 60, 85, 0.4),
-      inset 0 0 0 4px #fff,
-      inset 0 -3px 8px rgba(150, 60, 85, 0.25);
-    display: grid;
-    place-items: center;
-    font-size: clamp(1.2rem, 5.5vw, 1.7rem);
-    z-index: 3;
-    pointer-events: none;
-  }
+  .screen-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.4rem, 6vw, 1.9rem); margin: 4px 0 4px; text-align: center; }
+  .screen-sub { margin: 0 0 18px; color: var(--ink-soft); text-align: center; font-size: 0.96rem; line-height: 1.45; max-width: 420px; }
 
-  /* ---------- Controls ---------- */
-  .controls {
-    margin-top: clamp(18px, 5vw, 30px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
+  /* ---------- Home cards ---------- */
+  .home-cards { display: grid; gap: 16px; width: 100%; max-width: 420px; }
+  .home-card {
+    border: none; cursor: pointer; text-align: left;
+    background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 22px 22px; display: flex; align-items: center; gap: 16px;
+    transition: transform 0.14s ease, box-shadow 0.2s ease;
+    font-family: var(--font-body); color: var(--ink);
   }
+  .home-card:hover { transform: translateY(-2px); }
+  .home-card:active { transform: scale(0.98); }
+  .home-card:focus-visible { outline: 3px solid #6C5CE7; outline-offset: 3px; }
+  .home-card .emoji { font-size: 2.4rem; line-height: 1; }
+  .home-card h3 { font-family: var(--font-display); font-weight: 700; margin: 0 0 3px; font-size: 1.2rem; }
+  .home-card p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; line-height: 1.35; }
+
+  /* ---------- Buttons ---------- */
   .btn {
-    font-family: var(--font-display);
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    border-radius: 999px;
+    font-family: var(--font-display); font-weight: 700; border: none; cursor: pointer;
+    border-radius: 999px; color: #fff;
     transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
-    color: #fff;
   }
   .btn:active { transform: scale(0.96); }
   .btn:focus-visible { outline: 3px solid #6C5CE7; outline-offset: 3px; }
   .btn:disabled { opacity: 0.55; cursor: default; }
-
   .btn-spin {
-    font-size: clamp(1.15rem, 5vw, 1.4rem);
-    padding: 16px 56px;
+    font-size: clamp(1.15rem, 5vw, 1.4rem); padding: 16px 56px;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 0 12px 26px -8px rgba(232, 69, 95, 0.6);
-    letter-spacing: 0.4px;
+    box-shadow: 0 12px 26px -8px rgba(232, 69, 95, 0.6); letter-spacing: 0.4px;
   }
   .btn-spin:hover:not(:disabled) { box-shadow: 0 16px 30px -8px rgba(232, 69, 95, 0.7); }
+  .ghost-back {
+    align-self: flex-start; background: transparent; border: none; cursor: pointer;
+    color: var(--ink-soft); font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+    padding: 6px 10px 6px 0; margin-bottom: 6px;
+  }
+  .ghost-back:hover { color: var(--ink); }
+  .ghost-back:focus-visible { outline: 2px solid #6C5CE7; outline-offset: 2px; border-radius: 8px; }
 
   .sound-toggle {
-    background: transparent;
-    border: none;
-    color: var(--ink-soft);
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    background: transparent; border: none; color: var(--ink-soft);
+    font-family: var(--font-body); font-weight: 600; font-size: 0.9rem; cursor: pointer;
+    padding: 6px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;
   }
   .sound-toggle:hover { color: var(--ink); }
   .sound-toggle:focus-visible { outline: 2px solid #6C5CE7; outline-offset: 2px; }
 
-  /* ---------- Overlays (intro + card) ---------- */
+  /* ---------- Players setup ---------- */
+  .players-setup { display: flex; gap: 12px; width: 100%; max-width: 420px; margin-bottom: 18px; }
+  .players-setup label { flex: 1; font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 5px; }
+  .players-setup label.p1 { color: var(--p1); }
+  .players-setup label.p2 { color: var(--p2); }
+  .players-setup input {
+    font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--ink);
+    border: 2px solid #f0dfe6; border-radius: 12px; padding: 10px 12px; background: #fff; width: 100%;
+  }
+  .players-setup input:focus { outline: none; border-color: var(--accent-2); }
+
+  /* ---------- Game menu ---------- */
+  .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 460px; }
+  .game-tile {
+    border: none; cursor: pointer; background: var(--card-bg); border-radius: 18px; box-shadow: var(--shadow-sm);
+    padding: 20px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    font-family: var(--font-body); color: var(--ink); transition: transform 0.14s ease, box-shadow 0.2s ease;
+  }
+  .game-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .game-tile:active { transform: scale(0.97); }
+  .game-tile:focus-visible { outline: 3px solid #6C5CE7; outline-offset: 3px; }
+  .game-tile .emoji { font-size: 2.2rem; line-height: 1; }
+  .game-tile .t { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; }
+  .game-tile .d { font-size: 0.76rem; color: var(--ink-soft); text-align: center; line-height: 1.3; }
+
+  /* ---------- Game screen ---------- */
+  .game-top { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .game-top h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; margin: 0 0 6px; }
+  .status-bar {
+    width: 100%; max-width: 460px; text-align: center; margin: 4px 0 14px;
+    font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; min-height: 1.5em;
+  }
+  .status-bar .scores { display: flex; justify-content: center; gap: 14px; margin-top: 6px; font-size: 0.86rem; font-weight: 700; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; color: #fff; font-size: 0.86rem; }
+  .pname { font-weight: 800; }
+  .turn-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; vertical-align: middle; }
+  .game-board { width: 100%; display: flex; justify-content: center; margin-bottom: 16px; }
+  .game-controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .btn-mini {
+    background: #f3eef1; color: var(--ink); font-family: var(--font-display); font-weight: 700;
+    border: none; border-radius: 999px; padding: 10px 20px; cursor: pointer; font-size: 0.92rem;
+    box-shadow: var(--shadow-sm); transition: transform 0.12s ease, background 0.2s ease;
+  }
+  .btn-mini:hover { background: #ece4e9; }
+  .btn-mini:active { transform: scale(0.96); }
+  .btn-mini.primary { background: linear-gradient(135deg, #6C5CE7, #B084CC); color: #fff; }
+  .btn-mini:focus-visible { outline: 3px solid #6C5CE7; outline-offset: 2px; }
+
+  /* Tic-Tac-Toe */
+  .ttt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(82vw, 300px); aspect-ratio: 1; }
+  .ttt-cell {
+    background: #fff; border: none; border-radius: 16px; box-shadow: var(--shadow-sm); cursor: pointer;
+    font-size: clamp(2.2rem, 12vw, 3.2rem); font-weight: 800; font-family: var(--font-display);
+    display: grid; place-items: center; transition: transform 0.1s ease, background 0.2s ease;
+  }
+  .ttt-cell:hover:not(:disabled) { background: #fff6f9; }
+  .ttt-cell:disabled { cursor: default; }
+  .ttt-cell.win { background: #fff0a8; animation: pop 0.4s ease; }
+  @keyframes pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+  /* Connect Four */
+  .c4 { background: linear-gradient(160deg, #4AA8E0, #2f86c2); border-radius: 18px; padding: 10px; box-shadow: var(--shadow); display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: min(94vw, 380px); }
+  .c4-cell { aspect-ratio: 1; background: var(--bg-1); border-radius: 50%; box-shadow: inset 0 3px 6px rgba(0,0,0,0.25); cursor: pointer; position: relative; }
+  .c4-cell .disc { position: absolute; inset: 0; border-radius: 50%; transform: translateY(-420%); animation: drop 0.4s cubic-bezier(0.4, 1.2, 0.5, 1) forwards; box-shadow: inset 0 -3px 5px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.2); }
+  @keyframes drop { to { transform: translateY(0); } }
+  .c4-col-hl { outline: 3px solid rgba(255,255,255,0.6); outline-offset: -3px; border-radius: 50%; }
+
+  /* Checkers */
+  .checkers { display: grid; grid-template-columns: repeat(8, 1fr); width: min(94vw, 420px); aspect-ratio: 1; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); border: 4px solid #8a5a44; }
+  .ck-sq { position: relative; display: grid; place-items: center; }
+  .ck-sq.light { background: #f4e2cf; }
+  .ck-sq.dark { background: #b5826a; }
+  .ck-sq.playable { cursor: pointer; }
+  .ck-piece { width: 76%; aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.35), 0 2px 3px rgba(0,0,0,0.3); display: grid; place-items: center; color: #fff; font-size: 1rem; }
+  .ck-sq.sel::after { content: ""; position: absolute; inset: 8%; border: 3px solid #FFD54A; border-radius: 50%; box-shadow: 0 0 8px #FFD54A; }
+  .ck-sq.move::before { content: ""; width: 32%; aspect-ratio: 1; border-radius: 50%; background: rgba(255, 213, 74, 0.85); position: absolute; }
+  .ck-sq.jump::before { content: ""; position: absolute; inset: 12%; border: 3px dashed #FFD54A; border-radius: 50%; }
+
+  /* Battleship */
+  .bs-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+  .bs-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; width: min(94vw, 360px); aspect-ratio: 1; background: #cfe6f5; padding: 5px; border-radius: 12px; box-shadow: var(--shadow); }
+  .bs-cell { background: #eaf5fc; border-radius: 4px; cursor: pointer; display: grid; place-items: center; font-size: 0.8rem; position: relative; }
+  .bs-cell.ship { background: #7d8a99; }
+  .bs-cell.hit { background: #E8455F; }
+  .bs-cell.miss { background: #b9c7d2; }
+  .bs-cell.fire { cursor: crosshair; }
+  .bs-cell.hit::after { content: "✸"; color: #fff; font-size: 0.7rem; }
+  .bs-cell.miss::after { content: "•"; color: #5b6b78; }
+  .bs-fleet { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; font-size: 0.8rem; color: var(--ink-soft); }
+
+  /* ---------- Overlays (modal style) ---------- */
   .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(58, 30, 42, 0.42);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    display: grid;
-    place-items: center;
-    padding: 22px;
-    z-index: 20;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.32s ease;
+    position: fixed; inset: 0; background: rgba(58, 30, 42, 0.45);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    display: grid; place-items: center; padding: 22px; z-index: 30;
+    opacity: 0; pointer-events: none; transition: opacity 0.32s ease;
   }
   .overlay.show { opacity: 1; pointer-events: auto; }
-
   .panel {
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    max-width: 440px;
-    width: 100%;
-    padding: clamp(24px, 6vw, 34px);
-    text-align: center;
-    transform: scale(0.9) translateY(8px);
-    opacity: 0;
+    background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+    max-width: 440px; width: 100%; padding: clamp(24px, 6vw, 34px); text-align: center;
+    transform: scale(0.9) translateY(8px); opacity: 0;
     transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.36s ease;
   }
   .overlay.show .panel { transform: scale(1) translateY(0); opacity: 1; }
 
-  /* Intro card */
-  .intro h2 {
-    font-family: var(--font-display);
-    font-size: clamp(1.4rem, 5.5vw, 1.7rem);
-    margin: 0 0 4px;
-  }
+  .intro h2 { font-family: var(--font-display); font-size: clamp(1.4rem, 5.5vw, 1.7rem); margin: 0 0 4px; }
   .intro .sub { color: var(--ink-soft); margin: 0 0 20px; font-size: 0.98rem; }
   .rules { list-style: none; margin: 0 0 26px; padding: 0; text-align: left; }
-  .rules li {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 12px 14px;
-    background: linear-gradient(135deg, #fff6f9, #fdeef4);
-    border-radius: 14px;
-    margin-bottom: 10px;
-    font-size: 0.98rem;
-    line-height: 1.4;
-  }
+  .rules li { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: linear-gradient(135deg, #fff6f9, #fdeef4); border-radius: 14px; margin-bottom: 10px; font-size: 0.98rem; line-height: 1.4; }
   .rules li .ico { font-size: 1.25rem; line-height: 1.2; }
 
-  /* Question card */
-  .turn-line {
-    display: inline-block;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.82rem;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: #ffeef2;
-    padding: 7px 16px;
-    border-radius: 999px;
-    margin-bottom: 18px;
+  /* ---------- Wheel overlay (full-screen, used by solo + games) ---------- */
+  .wheel-screen {
+    position: fixed; inset: 0; z-index: 25;
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px 18px calc(24px + env(safe-area-inset-bottom));
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
   }
-  .cat-head {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 6px;
+  .wheel-screen.show { opacity: 1; pointer-events: auto; }
+  .wheel-screen .ghost-back { position: absolute; top: calc(16px + env(safe-area-inset-top)); left: 16px; }
+  .wheel-banner {
+    max-width: 420px; text-align: center; font-family: var(--font-display); font-weight: 700;
+    font-size: 1.05rem; color: var(--ink); margin-bottom: 14px; line-height: 1.4;
   }
+
+  .stage { position: relative; width: min(86vw, 380px); aspect-ratio: 1; margin: 0 auto; display: grid; place-items: center; filter: drop-shadow(0 26px 40px rgba(120, 50, 70, 0.28)); }
+  .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 4; filter: drop-shadow(0 5px 6px rgba(120, 40, 60, 0.4)); pointer-events: none; }
+  .wheel-wrap {
+    position: relative; width: 100%; height: 100%; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, transparent 0 86%, rgba(255,255,255,0.9) 86% 100%), conic-gradient(from 0deg, #fff, #ffe7ef, #fff, #f6e0ff, #fff, #ffe7ef, #fff);
+    padding: clamp(10px, 2.6vw, 15px);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9), inset 0 -6px 14px rgba(150, 70, 95, 0.18), 0 2px 4px rgba(255,255,255,0.8);
+  }
+  svg.wheel { width: 100%; height: 100%; display: block; border-radius: 50%; box-shadow: inset 0 0 22px rgba(80, 30, 50, 0.25); }
+  svg.wheel #rotor { transform-box: fill-box; transform-origin: center; will-change: transform; }
+  svg.wheel .lbl { transform-box: fill-box; transform-origin: center; will-change: transform; }
+  .seg-emoji { font-size: 20px; text-anchor: middle; dominant-baseline: central; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
+  .seg-label { font-family: var(--font-display); font-weight: 700; fill: #fff; text-anchor: middle; letter-spacing: 0.2px; text-shadow: 0 1px 2px rgba(60,20,35,0.45), 0 0 2px rgba(60,20,35,0.35); }
+  .hub {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 19%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 36% 30%, #ffffff, #ffd9e6 70%, #ffc2d6 100%);
+    box-shadow: 0 6px 14px rgba(150, 60, 85, 0.4), inset 0 0 0 4px #fff, inset 0 -3px 8px rgba(150, 60, 85, 0.25);
+    display: grid; place-items: center; font-size: clamp(1.2rem, 5.5vw, 1.7rem); z-index: 3; pointer-events: none;
+  }
+  .controls { margin-top: clamp(18px, 5vw, 30px); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+  /* ---------- Question card ---------- */
+  .turn-line { display: inline-block; font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; letter-spacing: 0.6px; text-transform: uppercase; color: var(--accent); background: #ffeef2; padding: 7px 16px; border-radius: 999px; margin-bottom: 18px; }
+  .cat-head { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px; }
   .cat-emoji { font-size: 2rem; line-height: 1; }
-  .cat-name {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(1.25rem, 5vw, 1.55rem);
-    margin: 0;
-  }
-  .spice-meter {
-    font-size: 0.82rem;
-    color: var(--ink-soft);
-    margin: 2px 0 0;
-    letter-spacing: 1px;
-  }
-  .question {
-    font-size: clamp(1.2rem, 5vw, 1.5rem);
-    line-height: 1.45;
-    margin: 18px 4px 26px;
-    color: var(--ink);
-    font-weight: 600;
-    min-height: 2.6em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  .cat-name { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.25rem, 5vw, 1.55rem); margin: 0; }
+  .spice-meter { font-size: 0.82rem; color: var(--ink-soft); margin: 2px 0 0; letter-spacing: 1px; }
+  .question { font-size: clamp(1.2rem, 5vw, 1.5rem); line-height: 1.45; margin: 18px 4px 26px; color: var(--ink); font-weight: 600; min-height: 2.6em; display: flex; align-items: center; justify-content: center; }
   .question.swap { animation: qswap 0.32s ease; }
-  @keyframes qswap {
-    0% { opacity: 0; transform: translateY(6px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-  .card-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .card-actions .btn-spin-again { grid-column: 1 / -1; }
-  .btn-soft {
-    background: #f3eef1;
-    color: var(--ink);
-    padding: 13px 10px;
-    font-size: 0.98rem;
-    box-shadow: var(--shadow-sm);
-  }
+  @keyframes qswap { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+  .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card-actions .btn-third { grid-column: 1 / -1; }
+  .btn-soft { background: #f3eef1; color: var(--ink); padding: 13px 10px; font-size: 0.98rem; box-shadow: var(--shadow-sm); }
   .btn-soft:hover { background: #ece4e9; }
-  .btn-spin-again {
-    background: linear-gradient(135deg, #6C5CE7, #B084CC);
-    padding: 14px;
-    font-size: 1.02rem;
-    box-shadow: 0 10px 22px -8px rgba(108, 92, 231, 0.6);
-  }
+  .btn-third { background: linear-gradient(135deg, #6C5CE7, #B084CC); padding: 14px; font-size: 1.02rem; box-shadow: 0 10px 22px -8px rgba(108, 92, 231, 0.6); }
 
-  /* Confetti */
-  #confetti {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 15;
-  }
+  #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 28; }
 
-  .footnote {
-    margin-top: auto;
-    padding-top: 18px;
-    color: var(--ink-soft);
-    font-size: 0.78rem;
-    opacity: 0.8;
-    text-align: center;
-  }
+  .footnote { margin-top: auto; padding-top: 18px; color: var(--ink-soft); font-size: 0.78rem; opacity: 0.8; text-align: center; }
 
   @media (prefers-reduced-motion: reduce) {
-    .panel, .overlay, .question.swap { transition-duration: 0.18s; animation: none; }
+    .panel, .overlay, .wheel-screen, .question.swap, .ck-piece, .c4-cell .disc { transition-duration: 0.18s; animation: none !important; }
   }
 </style>
 </head>
 <body>
 
-  <header>
-    <h1>Closer</h1>
-    <p>A question wheel for two — spin it, land on a category, and let one honest question bring you a little closer.</p>
-  </header>
-
-  <main class="stage" id="stage" aria-hidden="false">
-    <svg class="pointer" width="46" height="50" viewBox="0 0 46 50" aria-hidden="true">
-      <defs>
-        <linearGradient id="pointerGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#ff5e7a"/>
-          <stop offset="1" stop-color="#E8455F"/>
-        </linearGradient>
-      </defs>
-      <!-- rounded teardrop pin pointing down -->
-      <path d="M23 49 C12 33 4 26 4 16 A19 19 0 0 1 42 16 C42 26 34 33 23 49 Z" fill="url(#pointerGrad)"/>
-      <circle cx="23" cy="16" r="7.5" fill="#fff" opacity="0.95"/>
-      <circle cx="23" cy="16" r="3.4" fill="#E8455F"/>
-    </svg>
-    <div class="wheel-wrap">
-      <svg class="wheel" id="wheel" viewBox="0 0 300 300" role="img" aria-label="Wheel of question categories">
-        <g id="rotor"></g>
-      </svg>
+  <!-- ===================== HOME ===================== -->
+  <section class="screen active" id="homeScreen">
+    <header>
+      <h1>Closer</h1>
+      <p>For two. Spin a wheel of honest questions — on its own, or built into a game where every hit, capture, or win earns a question.</p>
+    </header>
+    <div class="home-cards">
+      <button class="home-card" id="goWheel">
+        <span class="emoji">🎡</span>
+        <span><h3>Just the Wheel</h3><p>Spin and answer. Simple and intimate.</p></span>
+      </button>
+      <button class="home-card" id="goGames">
+        <span class="emoji">🎮</span>
+        <span><h3>Play a Game</h3><p>Tic-Tac-Toe, Connect Four, Checkers, Battleship — the wheel pops up as you play.</p></span>
+      </button>
     </div>
-    <div class="hub" id="hub" aria-hidden="true">💞</div>
-  </main>
+    <p class="footnote">Both of you answer every question — the games just decide when.</p>
+  </section>
 
-  <div class="controls">
-    <button class="btn btn-spin" id="spinBtn" aria-describedby="spinHint">Spin</button>
-    <button class="sound-toggle" id="soundBtn" aria-pressed="true" title="Toggle tick sound">🔊 Sound on</button>
-    <span id="spinHint" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Press Enter or Space to spin the wheel.</span>
+  <!-- ===================== GAMES MENU ===================== -->
+  <section class="screen" id="gamesScreen">
+    <button class="ghost-back" id="gamesBack">‹ Home</button>
+    <h2 class="screen-title">Game night 🎮</h2>
+    <p class="screen-sub">Pick a game. Land a hit, capture a piece, or win a round — and the wheel pops up with a question for whoever's on the receiving end.</p>
+    <div class="players-setup">
+      <label class="p1">Player 1<input id="p1name" maxlength="14" placeholder="Player 1" /></label>
+      <label class="p2">Player 2<input id="p2name" maxlength="14" placeholder="Player 2" /></label>
+    </div>
+    <div class="game-grid" id="gameMenu"></div>
+  </section>
+
+  <!-- ===================== GAME SCREEN ===================== -->
+  <section class="screen" id="gameScreen">
+    <div class="game-top">
+      <button class="ghost-back" id="gameBack">‹ Games</button>
+    </div>
+    <h2 id="gameName" style="font-family:var(--font-display);font-weight:700;font-size:1.3rem;margin:0 0 6px;text-align:center;"></h2>
+    <div class="status-bar" id="gameStatus"></div>
+    <div id="gameBoard" class="game-board"></div>
+    <div class="game-controls" id="gameControls"></div>
+  </section>
+
+  <!-- ===================== WHEEL OVERLAY ===================== -->
+  <div class="wheel-screen" id="wheelOverlay">
+    <button class="ghost-back" id="wheelBack">‹ Home</button>
+    <div class="wheel-banner" id="wheelBanner"></div>
+    <main class="stage" id="stage">
+      <svg class="pointer" width="46" height="50" viewBox="0 0 46 50" aria-hidden="true">
+        <defs>
+          <linearGradient id="pointerGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ff5e7a"/><stop offset="1" stop-color="#E8455F"/>
+          </linearGradient>
+        </defs>
+        <path d="M23 49 C12 33 4 26 4 16 A19 19 0 0 1 42 16 C42 26 34 33 23 49 Z" fill="url(#pointerGrad)"/>
+        <circle cx="23" cy="16" r="7.5" fill="#fff" opacity="0.95"/>
+        <circle cx="23" cy="16" r="3.4" fill="#E8455F"/>
+      </svg>
+      <div class="wheel-wrap">
+        <svg class="wheel" id="wheel" viewBox="0 0 300 300" role="img" aria-label="Wheel of question categories">
+          <g id="rotor"></g>
+        </svg>
+      </div>
+      <div class="hub" id="hub" aria-hidden="true">💞</div>
+    </main>
+    <div class="controls">
+      <button class="btn btn-spin" id="spinBtn">Spin</button>
+      <button class="sound-toggle" id="soundBtn" aria-pressed="true" title="Toggle tick sound">🔊 Sound on</button>
+    </div>
   </div>
 
-  <p class="footnote">Both of you answer every question — the wheel just decides what you talk about.</p>
-
-  <!-- Intro / house rules -->
+  <!-- ===================== INTRO / HOUSE RULES ===================== -->
   <div class="overlay" id="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle">
     <div class="panel intro">
-      <h2 id="introTitle">Before you spin 💞</h2>
+      <h2 id="introTitle">Before you play 💞</h2>
       <p class="sub">Three small things to keep this a good place to be honest.</p>
       <ul class="rules">
         <li><span class="ico">💬</span><span>Be honest — there are no wrong answers.</span></li>
@@ -395,7 +368,7 @@
     </div>
   </div>
 
-  <!-- Question card -->
+  <!-- ===================== QUESTION CARD ===================== -->
   <div class="overlay" id="cardOverlay" role="dialog" aria-modal="true" aria-labelledby="catName">
     <div class="panel card">
       <span class="turn-line" id="turnLine">You answer first</span>
@@ -406,10 +379,20 @@
       <p class="spice-meter" id="spiceMeter" hidden>🌶️ leans flirty 🌶️</p>
       <p class="question" id="questionText" aria-live="polite"></p>
       <div class="card-actions">
-        <button class="btn btn-soft" id="passBtn">⏭️ Pass</button>
-        <button class="btn btn-soft" id="anotherBtn">🔄 Another question</button>
-        <button class="btn btn-spin-again" id="spinAgainBtn">🎡 Spin again</button>
+        <button class="btn btn-soft" id="cardPassBtn">⏭️ Pass</button>
+        <button class="btn btn-soft" id="cardAnotherBtn">🔄 Another question</button>
+        <button class="btn btn-third" id="cardThirdBtn">🎡 Spin again</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ===================== PASS THE PHONE ===================== -->
+  <div class="overlay" id="passOverlay" role="dialog" aria-modal="true" aria-labelledby="passTitle">
+    <div class="panel">
+      <div style="font-size:2.6rem;margin-bottom:6px;">📱➡️</div>
+      <h2 id="passTitle" style="font-family:var(--font-display);margin:0 0 6px;">Pass the phone</h2>
+      <p id="passText" style="color:var(--ink-soft);margin:0 0 22px;font-size:1rem;line-height:1.4;"></p>
+      <button class="btn btn-spin" id="passReadyBtn" style="width:100%">I'm ready</button>
     </div>
   </div>
 
@@ -417,15 +400,12 @@
 
 <script>
 /* ============================================================
-   Couples Question Wheel — "Closer"
-   Single-file, no dependencies. Data is the source of truth.
+   Closer — question wheel + two-player game night (single file)
    ============================================================ */
 
 const CATEGORIES = [
   {
-    name: "Hot & Spicy",
-    emoji: "🔥",
-    color: "#E8455F",
+    name: "Hot & Spicy", emoji: "🔥", color: "#E8455F",
     questions: [
       "What's the first thing you noticed about me physically?",
       "What's something I do that you find irresistibly attractive?",
@@ -462,9 +442,7 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "Heart to Heart",
-    emoji: "💗",
-    color: "#F4789B",
+    name: "Heart to Heart", emoji: "💗", color: "#F4789B",
     questions: [
       "When do you feel most loved by me?",
       "What's something you've never told me but want to?",
@@ -501,9 +479,7 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "The Deep End",
-    emoji: "🧠",
-    color: "#6C5CE7",
+    name: "The Deep End", emoji: "🧠", color: "#6C5CE7",
     questions: [
       "What's a pattern from your family you don't want to repeat?",
       "What does a healthy disagreement look like to you?",
@@ -540,9 +516,7 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "Just for Fun",
-    emoji: "🎈",
-    color: "#FDB44B",
+    name: "Just for Fun", emoji: "🎈", color: "#FDB44B",
     questions: [
       "If we were a duo with a team name, what would it be?",
       "What's the weirdest thing you'd do if you were invisible for a day?",
@@ -579,9 +553,7 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "Get to Know You",
-    emoji: "🌱",
-    color: "#2ECC8F",
+    name: "Get to Know You", emoji: "🌱", color: "#2ECC8F",
     questions: [
       "What's a small thing that made you happy this week?",
       "What did you want to be when you grew up?",
@@ -618,9 +590,7 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "This or That",
-    emoji: "⚖️",
-    color: "#4AA8E0",
+    name: "This or That", emoji: "⚖️", color: "#4AA8E0",
     questions: [
       "Beach vacation or mountain getaway?",
       "Big party or quiet night in?",
@@ -657,9 +627,7 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "Dreams & Future",
-    emoji: "🌅",
-    color: "#FF8C5A",
+    name: "Dreams & Future", emoji: "🌅", color: "#FF8C5A",
     questions: [
       "Where do you picture us living in ten years?",
       "What's a dream you want us to chase together?",
@@ -696,9 +664,7 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "Memory Lane",
-    emoji: "📸",
-    color: "#B084CC",
+    name: "Memory Lane", emoji: "📸", color: "#B084CC",
     questions: [
       "What's your favorite memory of our first date?",
       "When did you realize you were falling for me?",
@@ -736,364 +702,236 @@ const CATEGORIES = [
   }
 ];
 
-/* ---------- State ---------- */
-const SEG = CATEGORIES.length;          // 8
-const SEG_ANGLE = 360 / SEG;            // 45
+/* ---------- Wheel state ---------- */
+const SEG = CATEGORIES.length;
+const SEG_ANGLE = 360 / SEG;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-let rotation = 0;        // current absolute rotation of the wheel (deg, clockwise)
+let rotation = 0;
 let spinning = false;
-let currentCat = null;   // index of landed category
-let turnIndex = 0;       // alternates the "whose turn" line
+let currentCat = null;
+let turnIndex = 0;     // solo: alternates who answers first
 let soundOn = true;
 
+/* wheel session mode */
+let wheelMode = "solo";        // "solo" | "game"
+let gameAnswerer = null;       // string shown on the card in game mode
+let gameBanner = null;
+let gameOnDone = null;         // callback when the game spin is resolved/dismissed
+
+/* ---------- Players ---------- */
+const players = [
+  { name: "Player 1", color: "var(--p1)", raw: "#E8455F" },
+  { name: "Player 2", color: "var(--p2)", raw: "#3F8EDC" }
+];
+function pname(i) { return players[i].name || ("Player " + (i + 1)); }
+
 /* ---------- DOM ---------- */
-const rotor       = document.getElementById("rotor");
-const spinBtn     = document.getElementById("spinBtn");
-const soundBtn    = document.getElementById("soundBtn");
-const introOverlay= document.getElementById("introOverlay");
-const beginBtn    = document.getElementById("beginBtn");
-const cardOverlay = document.getElementById("cardOverlay");
-const turnLine    = document.getElementById("turnLine");
-const catEmoji    = document.getElementById("catEmoji");
-const catName     = document.getElementById("catName");
-const spiceMeter  = document.getElementById("spiceMeter");
-const questionText= document.getElementById("questionText");
-const passBtn     = document.getElementById("passBtn");
-const anotherBtn  = document.getElementById("anotherBtn");
-const spinAgainBtn= document.getElementById("spinAgainBtn");
+const $ = (id) => document.getElementById(id);
+const rotor = $("rotor");
+const spinBtn = $("spinBtn"), soundBtn = $("soundBtn");
+const wheelOverlay = $("wheelOverlay"), wheelBack = $("wheelBack"), wheelBanner = $("wheelBanner");
+const introOverlay = $("introOverlay"), beginBtn = $("beginBtn");
+const cardOverlay = $("cardOverlay"), turnLine = $("turnLine"), catEmoji = $("catEmoji"), catName = $("catName"), spiceMeter = $("spiceMeter"), questionText = $("questionText");
+const cardPassBtn = $("cardPassBtn"), cardAnotherBtn = $("cardAnotherBtn"), cardThirdBtn = $("cardThirdBtn");
+const passOverlay = $("passOverlay"), passTitle = $("passTitle"), passText = $("passText"), passReadyBtn = $("passReadyBtn");
+const gameBoardEl = $("gameBoard"), gameStatusEl = $("gameStatus"), gameControlsEl = $("gameControls"), gameNameEl = $("gameName");
 
 /* ============================================================
-   Geometry helpers — clock angle: 0° at top, increasing clockwise
+   Router
    ============================================================ */
-const CX = 150, CY = 150, R = 148;
-
-function pointOnCircle(angleDeg, radius) {
-  const a = (angleDeg) * Math.PI / 180;
-  return {
-    x: CX + radius * Math.sin(a),
-    y: CY - radius * Math.cos(a)
-  };
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
+  window.scrollTo(0, 0);
 }
 
-/* Split a multi-word label into two balanced lines so it fits the wedge. */
+/* ============================================================
+   Wheel geometry & build (verified)
+   ============================================================ */
+const CX = 150, CY = 150, R = 148;
+function pointOnCircle(a, radius) {
+  const r = a * Math.PI / 180;
+  return { x: CX + radius * Math.sin(r), y: CY - radius * Math.cos(r) };
+}
 function splitLabel(name) {
   const words = name.split(" ");
   if (words.length < 2) return [name];
-  // try every split point, keep the most balanced two lines
   let best = [name], bestDiff = Infinity;
   for (let i = 1; i < words.length; i++) {
-    const a = words.slice(0, i).join(" ");
-    const b = words.slice(i).join(" ");
+    const a = words.slice(0, i).join(" "), b = words.slice(i).join(" ");
     const diff = Math.abs(a.length - b.length);
     if (diff < bestDiff) { bestDiff = diff; best = [a, b]; }
   }
   return best;
 }
-
-/* Mix a hex color toward white (amt>0) or black (amt<0) by fraction |amt|. */
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  const target = amt < 0 ? 0 : 255;
-  const p = Math.abs(amt);
-  r = Math.round((target - r) * p + r);
-  g = Math.round((target - g) * p + g);
-  b = Math.round((target - b) * p + b);
+  const t = amt < 0 ? 0 : 255, p = Math.abs(amt);
+  r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b);
   return `rgb(${r},${g},${b})`;
 }
-
-/* ---------- Build the wheel ---------- */
 function buildWheel() {
   const ns = "http://www.w3.org/2000/svg";
-  const wheel = document.getElementById("wheel");
-
-  // Per-segment radial gradients give each wedge a soft domed look.
+  const wheel = $("wheel");
   const defs = document.createElementNS(ns, "defs");
   CATEGORIES.forEach((cat, i) => {
     const grad = document.createElementNS(ns, "radialGradient");
-    grad.setAttribute("id", `segGrad${i}`);
-    grad.setAttribute("cx", "50%");
-    grad.setAttribute("cy", "50%");
-    grad.setAttribute("r", "72%");
-    const stops = [
-      [0, shade(cat.color, 0.26)],
-      [0.62, cat.color],
-      [1, shade(cat.color, -0.14)]
-    ];
-    stops.forEach(([off, col]) => {
-      const s = document.createElementNS(ns, "stop");
-      s.setAttribute("offset", off);
-      s.setAttribute("stop-color", col);
-      grad.appendChild(s);
+    grad.setAttribute("id", `segGrad${i}`); grad.setAttribute("cx", "50%"); grad.setAttribute("cy", "50%"); grad.setAttribute("r", "72%");
+    [[0, shade(cat.color, 0.26)], [0.62, cat.color], [1, shade(cat.color, -0.14)]].forEach(([off, col]) => {
+      const s = document.createElementNS(ns, "stop"); s.setAttribute("offset", off); s.setAttribute("stop-color", col); grad.appendChild(s);
     });
     defs.appendChild(grad);
   });
   rotor.appendChild(defs);
 
   CATEGORIES.forEach((cat, i) => {
-    const start = i * SEG_ANGLE;
-    const end = (i + 1) * SEG_ANGLE;
-    const p1 = pointOnCircle(start, R);
-    const p2 = pointOnCircle(end, R);
-
+    const start = i * SEG_ANGLE, end = (i + 1) * SEG_ANGLE;
+    const p1 = pointOnCircle(start, R), p2 = pointOnCircle(end, R);
     const path = document.createElementNS(ns, "path");
     path.setAttribute("d", `M ${CX} ${CY} L ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${R} ${R} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} Z`);
     path.setAttribute("fill", `url(#segGrad${i})`);
-    path.setAttribute("stroke", "rgba(255,255,255,0.9)");
-    path.setAttribute("stroke-width", "2");
-    path.setAttribute("stroke-linejoin", "round");
+    path.setAttribute("stroke", "rgba(255,255,255,0.9)"); path.setAttribute("stroke-width", "2"); path.setAttribute("stroke-linejoin", "round");
     rotor.appendChild(path);
 
-    // Label as one upright unit: emoji directly ABOVE a 2-line name, centred
-    // on the segment's bisector. Because the group counter-rotates to stay
-    // upright, this stack reads identically on every segment — emoji on top,
-    // name below, never sideways or upside down.
     const mid = start + SEG_ANGLE / 2;
     const center = pointOnCircle(mid, R * 0.62);
-    const lx = center.x;
-    const emojiY = center.y - 15;
-    const nameY  = center.y + 12;
+    const lx = center.x, emojiY = center.y - 15, nameY = center.y + 12;
 
-    const labelGroup = document.createElementNS(ns, "g");
-    labelGroup.setAttribute("class", "lbl");
-
-    const emoji = document.createElementNS(ns, "text");
-    emoji.setAttribute("class", "seg-emoji");
-    emoji.setAttribute("x", lx.toFixed(2));
-    emoji.setAttribute("y", emojiY.toFixed(2));
-    emoji.textContent = cat.emoji;
-    labelGroup.appendChild(emoji);
-
+    const lg = document.createElementNS(ns, "g"); lg.setAttribute("class", "lbl");
+    const em = document.createElementNS(ns, "text");
+    em.setAttribute("class", "seg-emoji"); em.setAttribute("x", lx.toFixed(2)); em.setAttribute("y", emojiY.toFixed(2)); em.textContent = cat.emoji;
+    lg.appendChild(em);
     const lines = splitLabel(cat.name);
-    const nameText = document.createElementNS(ns, "text");
-    nameText.setAttribute("class", "seg-label");
-    nameText.setAttribute("x", lx.toFixed(2));
-    nameText.setAttribute("y", nameY.toFixed(2));
-    nameText.setAttribute("font-size", "10");
-    nameText.setAttribute("dominant-baseline", "central");
+    const nt = document.createElementNS(ns, "text");
+    nt.setAttribute("class", "seg-label"); nt.setAttribute("x", lx.toFixed(2)); nt.setAttribute("y", nameY.toFixed(2)); nt.setAttribute("font-size", "10"); nt.setAttribute("dominant-baseline", "central");
     lines.forEach((ln, li) => {
-      const tspan = document.createElementNS(ns, "tspan");
-      tspan.setAttribute("x", lx.toFixed(2));
-      tspan.setAttribute("dy", li === 0 ? (lines.length > 1 ? "-0.58em" : "0") : "1.14em");
-      tspan.textContent = ln;
-      nameText.appendChild(tspan);
+      const ts = document.createElementNS(ns, "tspan");
+      ts.setAttribute("x", lx.toFixed(2)); ts.setAttribute("dy", li === 0 ? (lines.length > 1 ? "-0.58em" : "0") : "1.14em"); ts.textContent = ln;
+      nt.appendChild(ts);
     });
-    labelGroup.appendChild(nameText);
-    rotor.appendChild(labelGroup);
+    lg.appendChild(nt); rotor.appendChild(lg);
   });
 
-  // crisp inner ring just inside the rim
   const ring = document.createElementNS(ns, "circle");
   ring.setAttribute("cx", CX); ring.setAttribute("cy", CY); ring.setAttribute("r", R - 1);
-  ring.setAttribute("fill", "none");
-  ring.setAttribute("stroke", "rgba(255,255,255,0.55)");
-  ring.setAttribute("stroke-width", "3");
+  ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "rgba(255,255,255,0.55)"); ring.setAttribute("stroke-width", "3");
   rotor.appendChild(ring);
 
-  // golden pegs at each segment boundary
   for (let i = 0; i < SEG; i++) {
     const peg = pointOnCircle(i * SEG_ANGLE, R - 7);
     const c = document.createElementNS(ns, "circle");
-    c.setAttribute("cx", peg.x.toFixed(2));
-    c.setAttribute("cy", peg.y.toFixed(2));
-    c.setAttribute("r", "3.1");
-    c.setAttribute("fill", "#FFE7A8");
-    c.setAttribute("stroke", "rgba(180,120,40,0.5)");
-    c.setAttribute("stroke-width", "0.8");
+    c.setAttribute("cx", peg.x.toFixed(2)); c.setAttribute("cy", peg.y.toFixed(2)); c.setAttribute("r", "3.1");
+    c.setAttribute("fill", "#FFE7A8"); c.setAttribute("stroke", "rgba(180,120,40,0.5)"); c.setAttribute("stroke-width", "0.8");
     rotor.appendChild(c);
   }
-
-  // Static glossy highlight (does NOT rotate) — a fixed light source up top.
   const gloss = document.createElementNS(ns, "ellipse");
-  gloss.setAttribute("cx", CX);
-  gloss.setAttribute("cy", CY - R * 0.42);
-  gloss.setAttribute("rx", R * 0.66);
-  gloss.setAttribute("ry", R * 0.34);
-  gloss.setAttribute("fill", "rgba(255,255,255,0.16)");
-  gloss.setAttribute("pointer-events", "none");
-  wheel.appendChild(gloss); // appended after #rotor so it stays on top & fixed
+  gloss.setAttribute("cx", CX); gloss.setAttribute("cy", CY - R * 0.42); gloss.setAttribute("rx", R * 0.66); gloss.setAttribute("ry", R * 0.34);
+  gloss.setAttribute("fill", "rgba(255,255,255,0.16)"); gloss.setAttribute("pointer-events", "none");
+  wheel.appendChild(gloss);
 }
 
-/* ============================================================
-   No-repeat question logic — shuffle a queue per category,
-   pop until empty, then reshuffle.
-   ============================================================ */
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
+/* ---------- No-repeat question logic ---------- */
+function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 function nextQuestion(catIndex) {
   const cat = CATEGORIES[catIndex];
-  if (!cat._queue || cat._queue.length === 0) {
-    cat._queue = shuffle(cat.questions.map((_, i) => i));
-  }
-  const idx = cat._queue.pop();
-  return cat.questions[idx];
+  if (!cat._queue || cat._queue.length === 0) cat._queue = shuffle(cat.questions.map((_, i) => i));
+  return cat.questions[cat._queue.pop()];
 }
 
-/* ============================================================
-   Audio — tiny WebAudio tick + landing chime (optional)
-   ============================================================ */
+/* ---------- Audio ---------- */
 let audioCtx = null;
 function ensureAudio() {
   if (!soundOn) return null;
-  if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch (e) { return null; }
-  }
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
   if (audioCtx.state === "suspended") audioCtx.resume();
   return audioCtx;
 }
 function tick() {
-  const ctx = ensureAudio();
-  if (!ctx) return;
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  o.type = "square";
-  o.frequency.value = 1500;
+  const ctx = ensureAudio(); if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = "square"; o.frequency.value = 1500;
   g.gain.setValueAtTime(0.0001, ctx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.005);
   g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
-  o.connect(g).connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + 0.06);
+  o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.06);
 }
 function chime() {
-  const ctx = ensureAudio();
-  if (!ctx) return;
+  const ctx = ensureAudio(); if (!ctx) return;
   [659.25, 880].forEach((freq, i) => {
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.value = freq;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "sine"; o.frequency.value = freq;
     const t = ctx.currentTime + i * 0.1;
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(0.12, t + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
-    o.connect(g).connect(ctx.destination);
-    o.start(t);
-    o.stop(t + 0.45);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.45);
   });
 }
 
 /* ============================================================
-   Spin — driven by a CSS transition (compositor-driven, smooth,
-   and robust: it resolves via `transitionend` with a guaranteed
-   setTimeout fallback, so the spin never hangs even if the tab is
-   backgrounded mid-spin or rAF is throttled).
-
-   Land math: segment k's center sits at clock angle k*45 + 22.5.
-   We want that center under the top pointer (0°), so we drive
-   rotation R such that (-R) mod 360 falls inside segment k.
+   Spin — CSS transition driven, resolves via transitionend + fallback
    ============================================================ */
-// easeOutQuart — responsive start with a smooth, gradual settle (less abrupt
-// and less "creep" at the end than a steep expo curve).
 const SPIN_BEZIER = [0.17, 0.84, 0.32, 1];
-
-function landedIndexFor(rot) {
-  const atTop = ((-rot) % 360 + 360) % 360; // original clock angle now under pointer
-  return Math.floor(atTop / SEG_ANGLE) % SEG;
-}
+function landedIndexFor(rot) { return Math.floor(((-rot) % 360 + 360) % 360 / SEG_ANGLE) % SEG; }
 
 let tickTimers = [];
 function clearTicks() { tickTimers.forEach(clearTimeout); tickTimers = []; }
-
-// One bezier coordinate at parameter s (control points 0, c1, c2, 1).
-function bezAt(s, c1, c2) {
-  const u = 1 - s;
-  return 3 * u * u * s * c1 + 3 * u * s * s * c2 + s * s * s;
-}
-// Given a progress fraction (the y of the easing curve), return the
-// elapsed-time fraction (the x) — used to align ticks with the visual.
+function bezAt(s, c1, c2) { const u = 1 - s; return 3 * u * u * s * c1 + 3 * u * s * s * c2 + s * s * s; }
 function timeFractionForProgress(y) {
   const [x1, y1, x2, y2] = SPIN_BEZIER;
   let lo = 0, hi = 1, s = y;
-  for (let i = 0; i < 24; i++) {
-    s = (lo + hi) / 2;
-    (bezAt(s, y1, y2) < y) ? (lo = s) : (hi = s);
-  }
+  for (let i = 0; i < 24; i++) { s = (lo + hi) / 2; (bezAt(s, y1, y2) < y) ? (lo = s) : (hi = s); }
   return bezAt(s, x1, x2);
 }
-// Schedule a tick each time the wheel crosses a segment boundary
-// (rotation passing a multiple of 45°), eased to match the motion.
 function scheduleTicks(startRot, endRot, duration) {
   clearTicks();
   if (reduceMotion) return;
-  const span = endRot - startRot;
-  if (span <= 0) return;
-  const firstB = Math.floor(startRot / SEG_ANGLE) + 1;
-  const lastB = Math.floor(endRot / SEG_ANGLE);
+  const span = endRot - startRot; if (span <= 0) return;
+  const firstB = Math.floor(startRot / SEG_ANGLE) + 1, lastB = Math.floor(endRot / SEG_ANGLE);
   for (let b = firstB; b <= lastB; b++) {
-    const frac = (b * SEG_ANGLE - startRot) / span;     // progress when boundary hits pointer
-    const t = timeFractionForProgress(frac) * duration; // eased elapsed time
-    tickTimers.push(setTimeout(tick, t));
+    const frac = (b * SEG_ANGLE - startRot) / span;
+    tickTimers.push(setTimeout(tick, timeFractionForProgress(frac) * duration));
   }
 }
-
 function spin() {
   if (spinning) return;
-  spinning = true;
-  spinBtn.disabled = true;
-  ensureAudio(); // unlock audio on the user gesture
+  spinning = true; spinBtn.disabled = true; ensureAudio();
 
-  // pick target segment, then aim its center under the pointer with a little jitter
   const target = Math.floor(Math.random() * SEG);
   const targetCenter = target * SEG_ANGLE + SEG_ANGLE / 2;
-  const jitter = (Math.random() * 2 - 1) * (SEG_ANGLE / 2 - 6); // stay clear of borders
+  const jitter = (Math.random() * 2 - 1) * (SEG_ANGLE / 2 - 6);
   const desiredMod = ((360 - (targetCenter + jitter)) % 360 + 360) % 360;
-
   const currentMod = ((rotation % 360) + 360) % 360;
   const delta = (desiredMod - currentMod + 360) % 360;
-
-  const fullSpins = reduceMotion ? 0 : (5 + Math.floor(Math.random() * 2)); // 5–6
+  const fullSpins = reduceMotion ? 0 : (5 + Math.floor(Math.random() * 2));
   const startRot = rotation;
   const endRot = startRot + fullSpins * 360 + delta + (reduceMotion ? 0 : 360);
   const duration = reduceMotion ? 400 : 5000;
+  rotation = endRot;
 
-  rotation = endRot; // logical destination; read in finishSpin()
-
-  // The wheel rotates to endRot; each label counter-rotates to -endRot about
-  // its own center, so labels stay upright the whole way and at the stop.
   const labels = rotor.querySelectorAll(".lbl");
   const transition = `transform ${duration}ms cubic-bezier(${SPIN_BEZIER.join(",")})`;
-
-  // Force a reflow so the browser registers the starting transforms (no snap).
-  rotor.style.transition = "none";
-  labels.forEach(l => l.style.transition = "none");
+  rotor.style.transition = "none"; labels.forEach(l => l.style.transition = "none");
   void rotor.getBoundingClientRect();
-
-  rotor.style.transition = transition;
-  rotor.style.transform = `rotate(${endRot}deg)`;
-  labels.forEach(l => {
-    l.style.transition = transition;
-    l.style.transform = `rotate(${-endRot}deg)`;
-  });
+  rotor.style.transition = transition; rotor.style.transform = `rotate(${endRot}deg)`;
+  labels.forEach(l => { l.style.transition = transition; l.style.transform = `rotate(${-endRot}deg)`; });
 
   scheduleTicks(startRot, endRot, duration);
 
-  // Resolve exactly once — whichever of transitionend / fallback fires first.
   let done = false;
   const finish = () => {
-    if (done) return;
-    done = true;
+    if (done) return; done = true;
     rotor.removeEventListener("transitionend", finish);
     clearTimeout(fallback);
-    rotor.style.transition = "none";
-    labels.forEach(l => l.style.transition = "none");
+    rotor.style.transition = "none"; labels.forEach(l => l.style.transition = "none");
     finishSpin();
   };
   rotor.addEventListener("transitionend", finish);
   const fallback = setTimeout(finish, duration + 250);
 }
-
 function finishSpin() {
-  spinning = false;
-  spinBtn.disabled = false;
+  spinning = false; spinBtn.disabled = false;
   currentCat = landedIndexFor(rotation);
   chime();
   if (!reduceMotion) burstConfetti(CATEGORIES[currentCat].color);
@@ -1101,143 +939,502 @@ function finishSpin() {
 }
 
 /* ============================================================
-   Question card
+   Wheel session (open / card / actions)
    ============================================================ */
-// Alternate who answers first — flips on every question shown (spin, Pass, Another)
+function openWheel(opts) {
+  opts = opts || {};
+  wheelMode = opts.mode || "solo";
+  gameAnswerer = opts.answerer || null;
+  gameBanner = opts.banner || null;
+  gameOnDone = opts.onDone || null;
+
+  cardOverlay.classList.remove("show");
+  if (gameBanner) { wheelBanner.textContent = gameBanner; wheelBanner.style.display = ""; }
+  else { wheelBanner.textContent = ""; wheelBanner.style.display = "none"; }
+  wheelBack.textContent = wheelMode === "solo" ? "‹ Home" : "‹ Skip question";
+  spinBtn.disabled = false;
+  wheelOverlay.classList.add("show");
+  ensureAudio();
+  setTimeout(() => spinBtn.focus(), 200);
+}
+function closeWheel() { wheelOverlay.classList.remove("show"); }
+
 function advanceTurnLine() {
   turnLine.textContent = (turnIndex % 2 === 0) ? "You answer first" : "Your partner answers first";
   turnIndex++;
 }
-
 function showCard(catIndex) {
   const cat = CATEGORIES[catIndex];
-
   catEmoji.textContent = cat.emoji;
   catName.textContent = cat.name;
   spiceMeter.hidden = (cat.name !== "Hot & Spicy");
-
-  advanceTurnLine();
+  if (wheelMode === "solo") { advanceTurnLine(); cardThirdBtn.textContent = "🎡 Spin again"; }
+  else { turnLine.textContent = gameAnswerer; cardThirdBtn.textContent = "✓ Back to game"; }
   setQuestion(nextQuestion(catIndex));
   cardOverlay.classList.add("show");
-  // focus a safe action for keyboard users
-  setTimeout(() => spinAgainBtn.focus(), 120);
+  setTimeout(() => cardThirdBtn.focus(), 120);
 }
-
 function setQuestion(text) {
   questionText.textContent = text;
-  questionText.classList.remove("swap");
-  // restart the swap animation
-  void questionText.offsetWidth;
-  questionText.classList.add("swap");
+  questionText.classList.remove("swap"); void questionText.offsetWidth; questionText.classList.add("swap");
 }
-
 function drawAnother() {
   if (currentCat === null) return;
-  advanceTurnLine();
+  if (wheelMode === "solo") advanceTurnLine();
   setQuestion(nextQuestion(currentCat));
 }
-
-function closeCard() {
-  cardOverlay.classList.remove("show");
-}
+function closeCard() { cardOverlay.classList.remove("show"); }
 
 /* ============================================================
-   Confetti — lightweight, self-contained
+   Confetti
    ============================================================ */
-const confettiCanvas = document.getElementById("confetti");
+const confettiCanvas = $("confetti");
 const cctx = confettiCanvas.getContext("2d");
-let confettiParticles = [];
-let confettiRAF = null;
-let confettiSafety = null;
-
-function sizeConfetti() {
-  confettiCanvas.width = window.innerWidth * devicePixelRatio;
-  confettiCanvas.height = window.innerHeight * devicePixelRatio;
-  cctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-}
-sizeConfetti();
-window.addEventListener("resize", sizeConfetti);
-
+let confettiParticles = [], confettiRAF = null, confettiSafety = null;
+function sizeConfetti() { confettiCanvas.width = window.innerWidth * devicePixelRatio; confettiCanvas.height = window.innerHeight * devicePixelRatio; cctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); }
+sizeConfetti(); window.addEventListener("resize", sizeConfetti);
 function burstConfetti(tint) {
   const palette = [tint, "#ffffff", "#FFD36E", "#F4789B", "#6C5CE7"];
   const w = window.innerWidth;
   for (let i = 0; i < 90; i++) {
-    confettiParticles.push({
-      x: w / 2 + (Math.random() - 0.5) * 120,
-      y: window.innerHeight * 0.32,
-      vx: (Math.random() - 0.5) * 9,
-      vy: Math.random() * -11 - 4,
-      g: 0.32 + Math.random() * 0.1,
-      size: 5 + Math.random() * 6,
-      rot: Math.random() * Math.PI,
-      vrot: (Math.random() - 0.5) * 0.3,
-      color: palette[Math.floor(Math.random() * palette.length)],
-      life: 1
-    });
+    confettiParticles.push({ x: w / 2 + (Math.random() - 0.5) * 120, y: window.innerHeight * 0.32, vx: (Math.random() - 0.5) * 9, vy: Math.random() * -11 - 4, g: 0.32 + Math.random() * 0.1, size: 5 + Math.random() * 6, rot: Math.random() * Math.PI, vrot: (Math.random() - 0.5) * 0.3, color: palette[Math.floor(Math.random() * palette.length)], life: 1 });
   }
   if (!confettiRAF) confettiRAF = requestAnimationFrame(stepConfetti);
-  // Safety: guarantee the canvas clears even if rAF is throttled (background tab).
   clearTimeout(confettiSafety);
-  confettiSafety = setTimeout(() => {
-    confettiParticles = [];
-    cctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  }, 3000);
+  confettiSafety = setTimeout(() => { confettiParticles = []; cctx.clearRect(0, 0, window.innerWidth, window.innerHeight); }, 3000);
 }
-
 function stepConfetti() {
   cctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   confettiParticles.forEach(p => {
-    p.vy += p.g;
-    p.x += p.vx;
-    p.y += p.vy;
-    p.rot += p.vrot;
-    p.life -= 0.012;
-    cctx.save();
-    cctx.globalAlpha = Math.max(p.life, 0);
-    cctx.translate(p.x, p.y);
-    cctx.rotate(p.rot);
-    cctx.fillStyle = p.color;
-    cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-    cctx.restore();
+    p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life -= 0.012;
+    cctx.save(); cctx.globalAlpha = Math.max(p.life, 0); cctx.translate(p.x, p.y); cctx.rotate(p.rot); cctx.fillStyle = p.color; cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6); cctx.restore();
   });
   confettiParticles = confettiParticles.filter(p => p.life > 0 && p.y < window.innerHeight + 40);
-  if (confettiParticles.length) {
-    confettiRAF = requestAnimationFrame(stepConfetti);
-  } else {
-    cctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    confettiRAF = null;
-  }
+  if (confettiParticles.length) confettiRAF = requestAnimationFrame(stepConfetti);
+  else { cctx.clearRect(0, 0, window.innerWidth, window.innerHeight); confettiRAF = null; }
 }
+
+/* ============================================================
+   Game framework
+   ============================================================ */
+let activeGame = null;
+
+function pillHTML(i, withDot) {
+  return `<span class="pill" style="background:${players[i].color}">${withDot ? '' : ''}<span class="pname">${escapeHTML(pname(i))}</span></span>`;
+}
+function escapeHTML(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function setStatus(html) { gameStatusEl.innerHTML = html; }
+function setControls(buttons) {
+  gameControlsEl.innerHTML = "";
+  buttons.forEach(b => {
+    const el = document.createElement("button");
+    el.className = "btn-mini" + (b.primary ? " primary" : "");
+    el.textContent = b.label;
+    el.addEventListener("click", b.onClick);
+    gameControlsEl.appendChild(el);
+  });
+}
+function turnBadge(i) {
+  return `<span class="pill" style="background:${players[i].color}"><span class="pname">${escapeHTML(pname(i))}</span></span>`;
+}
+
+/* Trigger the wheel from a game. receiver = player index who answers. */
+function triggerSpin(receiver, banner, onDone) {
+  openWheel({ mode: "game", answerer: pname(receiver) + " answers 💬", banner, onDone });
+}
+
+/* ---------- Pass the phone ---------- */
+let passCb = null;
+function showPass(toIdx, msg) {
+  return new Promise(res => {
+    passTitle.textContent = "Pass the phone";
+    passText.innerHTML = msg || `Hand the phone to <b style="color:${players[toIdx].color}">${escapeHTML(pname(toIdx))}</b>, then tap below.`;
+    passCb = res;
+    passOverlay.classList.add("show");
+  });
+}
+passReadyBtn.addEventListener("click", () => { passOverlay.classList.remove("show"); const cb = passCb; passCb = null; if (cb) cb(); });
+
+const GAMES = {
+  ttt:        { title: "Tic-Tac-Toe", emoji: "⭕", desc: "Win a round → loser answers", init: () => TTT.init() },
+  c4:         { title: "Connect Four", emoji: "🔴", desc: "Connect 4 → loser answers", init: () => C4.init() },
+  checkers:   { title: "Checkers", emoji: "⚪", desc: "Capture a piece → they answer", init: () => CK.init() },
+  battleship: { title: "Battleship", emoji: "🚢", desc: "Land a hit → they answer", init: () => BS.init() }
+};
+
+function buildGameMenu() {
+  const m = $("gameMenu"); m.innerHTML = "";
+  Object.keys(GAMES).forEach(key => {
+    const g = GAMES[key];
+    const b = document.createElement("button");
+    b.className = "game-tile";
+    b.innerHTML = `<span class="emoji">${g.emoji}</span><span class="t">${g.title}</span><span class="d">${g.desc}</span>`;
+    b.addEventListener("click", () => startGame(key));
+    m.appendChild(b);
+  });
+}
+function startGame(key) {
+  activeGame = key;
+  gameNameEl.textContent = GAMES[key].emoji + "  " + GAMES[key].title;
+  showScreen("gameScreen");
+  GAMES[key].init();
+}
+
+/* ============================================================
+   GAME: Tic-Tac-Toe
+   ============================================================ */
+const TTT = (() => {
+  const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  let board, turn, scores, starter, busy;
+  function init() { scores = [0, 0]; starter = 0; newRound(); }
+  function newRound() { board = Array(9).fill(-1); turn = starter; busy = false; render(); status(); controls(); }
+  function status() { setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">to move</span><div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`); }
+  function controls() { setControls([{ label: "↺ Restart match", onClick: init }]); }
+  function mark(p) { return `<span style="color:${players[p].color}">${p === 0 ? "✕" : "◯"}</span>`; }
+  function render(winLine) {
+    gameBoardEl.className = "game-board";
+    gameBoardEl.innerHTML = `<div class="ttt">` + board.map((v, i) =>
+      `<button class="ttt-cell${winLine && winLine.includes(i) ? " win" : ""}" data-i="${i}" ${v >= 0 ? "disabled" : ""}>${v >= 0 ? mark(v) : ""}</button>`).join("") + `</div>`;
+    gameBoardEl.querySelector(".ttt").onclick = e => { const b = e.target.closest(".ttt-cell"); if (b) onCell(+b.dataset.i); };
+  }
+  function winnerLine() { for (const L of LINES) { const [a, b, c] = L; if (board[a] >= 0 && board[a] === board[b] && board[b] === board[c]) return L; } return null; }
+  function onCell(i) {
+    if (busy || board[i] >= 0) return;
+    board[i] = turn;
+    const L = winnerLine();
+    if (L) {
+      busy = true; render(L);
+      const winner = turn, loser = 1 - turn; scores[winner]++;
+      status();
+      setTimeout(() => triggerSpin(loser, `${pname(winner)} won the round! 🎉 Spin to quiz ${pname(loser)}.`, () => { starter = 1 - starter; newRound(); }), 700);
+      return;
+    }
+    if (board.every(v => v >= 0)) {
+      render(); setStatus(`It's a draw! 🤝<div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`);
+      setControls([{ label: "Next round", primary: true, onClick: () => { starter = 1 - starter; newRound(); } }, { label: "↺ Restart match", onClick: init }]);
+      return;
+    }
+    turn = 1 - turn; render(); status();
+  }
+  return { init };
+})();
+
+/* ============================================================
+   GAME: Connect Four
+   ============================================================ */
+const C4 = (() => {
+  const ROWS = 6, COLS = 7;
+  let board, turn, scores, starter, busy;
+  function init() { scores = [0, 0]; starter = 0; newRound(); }
+  function newRound() { board = Array.from({ length: ROWS }, () => Array(COLS).fill(-1)); turn = starter; busy = false; render(); status(); controls(); }
+  function status() { setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">drop a disc</span><div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`); }
+  function controls() { setControls([{ label: "↺ Restart match", onClick: init }]); }
+  function render(lastDrop) {
+    gameBoardEl.className = "game-board";
+    let html = `<div class="c4">`;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const v = board[r][c];
+      const isNew = lastDrop && lastDrop.r === r && lastDrop.c === c;
+      html += `<div class="c4-cell" data-c="${c}">${v >= 0 ? `<div class="disc" style="background:${players[v].raw || players[v].color};${isNew ? "" : "animation:none;transform:translateY(0)"}"></div>` : ""}</div>`;
+    }
+    html += `</div>`;
+    gameBoardEl.innerHTML = html;
+    gameBoardEl.querySelector(".c4").onclick = e => { const cell = e.target.closest(".c4-cell"); if (cell) drop(+cell.dataset.c); };
+  }
+  function drop(c) {
+    if (busy) return;
+    let r = -1;
+    for (let row = ROWS - 1; row >= 0; row--) if (board[row][c] < 0) { r = row; break; }
+    if (r < 0) return;
+    board[r][c] = turn;
+    if (won(r, c)) {
+      busy = true; render({ r, c });
+      const winner = turn, loser = 1 - turn; scores[winner]++; status();
+      setTimeout(() => triggerSpin(loser, `${pname(winner)} connected four! 🎉 Spin to quiz ${pname(loser)}.`, () => { starter = 1 - starter; newRound(); }), 700);
+      return;
+    }
+    if (board.every(row => row.every(v => v >= 0))) {
+      render({ r, c }); setStatus(`Board full — it's a draw! 🤝<div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`);
+      setControls([{ label: "Next round", primary: true, onClick: () => { starter = 1 - starter; newRound(); } }, { label: "↺ Restart match", onClick: init }]);
+      return;
+    }
+    turn = 1 - turn; render({ r, c }); status();
+  }
+  function won(r, c) {
+    const p = board[r][c];
+    const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    for (const [dr, dc] of dirs) {
+      let count = 1;
+      for (const sign of [1, -1]) {
+        let rr = r + dr * sign, cc = c + dc * sign;
+        while (rr >= 0 && rr < ROWS && cc >= 0 && cc < COLS && board[rr][cc] === p) { count++; rr += dr * sign; cc += dc * sign; }
+      }
+      if (count >= 4) return true;
+    }
+    return false;
+  }
+  return { init };
+})();
+
+/* ============================================================
+   GAME: Checkers (capture -> captured side answers)
+   ============================================================ */
+const CK = (() => {
+  let board, turn, sel, chain, capThisTurn, busy, over;
+  const inB = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+  function init() {
+    board = Array.from({ length: 8 }, () => Array(8).fill(null));
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      if ((r + c) % 2 === 1) {
+        if (r < 3) board[r][c] = { p: 0, k: false };
+        else if (r > 4) board[r][c] = { p: 1, k: false };
+      }
+    }
+    turn = 0; sel = null; chain = false; capThisTurn = 0; busy = false; over = false;
+    render(); status(); controls();
+  }
+  function controls() { setControls([{ label: "↺ Restart", onClick: init }]); }
+  function status() {
+    if (over) return;
+    setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">to move</span><div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${count(0)} left</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${count(1)} left</span></div>`);
+  }
+  function count(p) { let n = 0; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (board[r][c] && board[r][c].p === p) n++; return n; }
+  function dirs(piece) { return piece.k ? [[1,-1],[1,1],[-1,-1],[-1,1]] : (piece.p === 0 ? [[1,-1],[1,1]] : [[-1,-1],[-1,1]]); }
+  function movesFor(r, c) {
+    const piece = board[r][c]; if (!piece) return { simple: [], jumps: [] };
+    const simple = [], jumps = [];
+    for (const [dr, dc] of dirs(piece)) {
+      const sr = r + dr, sc = c + dc;
+      if (inB(sr, sc) && !board[sr][sc]) simple.push({ r: sr, c: sc });
+      const mr = r + dr, mc = c + dc, lr = r + 2 * dr, lc = c + 2 * dc;
+      if (inB(lr, lc) && !board[lr][lc] && board[mr] && board[mr][mc] && board[mr][mc].p !== piece.p)
+        jumps.push({ r: lr, c: lc, cap: { r: mr, c: mc } });
+    }
+    return { simple, jumps };
+  }
+  function legalDests(r, c) { const m = movesFor(r, c); return chain ? m.jumps : m.jumps.concat(m.simple); }
+  function hasAnyMove(p) {
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (board[r][c] && board[r][c].p === p) { const m = movesFor(r, c); if (m.simple.length || m.jumps.length) return true; }
+    return false;
+  }
+  function render(highlight) {
+    gameBoardEl.className = "game-board";
+    const dests = sel ? legalDests(sel.r, sel.c) : [];
+    let html = `<div class="checkers">`;
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      const dark = (r + c) % 2 === 1;
+      const piece = board[r][c];
+      const isSel = sel && sel.r === r && sel.c === c;
+      const d = dests.find(m => m.r === r && m.c === c);
+      let cls = "ck-sq " + (dark ? "dark" : "light");
+      if (dark) cls += " playable";
+      if (isSel) cls += " sel";
+      if (d) cls += d.cap ? " jump" : " move";
+      let inner = "";
+      if (piece) inner = `<div class="ck-piece" style="background:${players[piece.p].raw};">${piece.k ? "♛" : ""}</div>`;
+      html += `<div class="${cls}" data-r="${r}" data-c="${c}">${inner}</div>`;
+    }
+    html += `</div>`;
+    gameBoardEl.innerHTML = html;
+    gameBoardEl.querySelector(".checkers").onclick = e => { const sq = e.target.closest(".ck-sq"); if (sq) onSquare(+sq.dataset.r, +sq.dataset.c); };
+  }
+  function onSquare(r, c) {
+    if (busy || over) return;
+    const cell = board[r][c];
+    if (!chain && cell && cell.p === turn) { sel = { r, c }; render(); return; }
+    if (!sel) return;
+    const mv = legalDests(sel.r, sel.c).find(m => m.r === r && m.c === c);
+    if (!mv) { if (!chain && cell && cell.p === turn) { sel = { r, c }; render(); } return; }
+    // execute move
+    const piece = board[sel.r][sel.c];
+    board[r][c] = piece; board[sel.r][sel.c] = null;
+    if (mv.cap) { board[mv.cap.r][mv.cap.c] = null; capThisTurn++; }
+    let kinged = false;
+    if (!piece.k && ((piece.p === 0 && r === 7) || (piece.p === 1 && r === 0))) { piece.k = true; kinged = true; }
+    sel = { r, c };
+    if (mv.cap && !kinged) {
+      const more = movesFor(r, c).jumps;
+      if (more.length) { chain = true; render(); return; }
+    }
+    const caps = capThisTurn;
+    sel = null; chain = false; capThisTurn = 0;
+    endTurn(caps);
+  }
+  function endTurn(caps) {
+    const mover = turn, opp = 1 - turn;
+    turn = opp;
+    render();
+    const oppDead = count(opp) === 0 || !hasAnyMove(opp);
+    const finishUp = () => { if (oppDead) gameOver(mover); else { render(); status(); } };
+    if (caps > 0) {
+      const banner = oppDead
+        ? `${pname(mover)} wins! 🏆 One last question for ${pname(opp)}.`
+        : `${pname(mover)} captured a piece! Spin to quiz ${pname(opp)}.`;
+      busy = true;
+      triggerSpin(opp, banner, () => { busy = false; finishUp(); });
+    } else if (oppDead) {
+      busy = true;
+      triggerSpin(opp, `${pname(mover)} wins! 🏆 One last question for ${pname(opp)}.`, () => { busy = false; gameOver(mover); });
+    } else { status(); }
+  }
+  function gameOver(winner) {
+    over = true;
+    setStatus(`🏆 ${turnBadge(winner)} <span style="font-weight:700">wins the game!</span>`);
+    if (!reduceMotion) burstConfetti(players[winner].raw);
+    setControls([{ label: "Play again", primary: true, onClick: init }]);
+  }
+  return { init };
+})();
+
+/* ============================================================
+   GAME: Battleship (hit -> hit player answers)
+   ============================================================ */
+const BS = (() => {
+  const SIZE = 10, SHIPS = [5, 4, 3, 3, 2];
+  let grids, phase, setupIdx, current, winner, busy;
+
+  function newGrid() { return { occ: {}, ships: [], marks: {} }; } // occ: cell->shipIdx, marks: cell->'hit'|'miss'
+  function key(r, c) { return r * SIZE + c; }
+  function init() {
+    grids = [newGrid(), newGrid()];
+    randomize(0); randomize(1);
+    phase = "setup"; setupIdx = 0; current = 0; winner = null; busy = false;
+    renderSetup();
+  }
+  function randomize(p) {
+    const g = newGrid();
+    for (let s = 0; s < SHIPS.length; s++) {
+      const len = SHIPS[s]; let placed = false, tries = 0;
+      while (!placed && tries++ < 500) {
+        const horiz = Math.random() < 0.5;
+        const r = Math.floor(Math.random() * (horiz ? SIZE : SIZE - len + 1));
+        const c = Math.floor(Math.random() * (horiz ? SIZE - len + 1 : SIZE));
+        const cells = [];
+        let ok = true;
+        for (let i = 0; i < len; i++) {
+          const rr = horiz ? r : r + i, cc = horiz ? c + i : c;
+          // reject if the cell or any of its 8 neighbours already holds a ship (no touching)
+          for (let dr = -1; dr <= 1 && ok; dr++) for (let dc = -1; dc <= 1; dc++) {
+            const nr = rr + dr, nc = cc + dc;
+            if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && g.occ[key(nr, nc)] !== undefined) { ok = false; break; }
+          }
+          if (!ok) break;
+          cells.push(key(rr, cc));
+        }
+        if (!ok) continue;
+        const idx = g.ships.length; g.ships.push({ cells, hits: 0, len });
+        cells.forEach(k => g.occ[k] = idx);
+        placed = true;
+      }
+    }
+    grids[p] = g;
+  }
+
+  /* ----- Setup ----- */
+  function renderSetup() {
+    const p = setupIdx;
+    gameNameEl.textContent = "🚢  Battleship";
+    setStatus(`${turnBadge(p)} <span style="font-weight:600">— arrange your fleet</span>`);
+    const g = grids[p];
+    let html = `<div class="bs-wrap"><div class="bs-grid">`;
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+      const isShip = g.occ[key(r, c)] !== undefined;
+      html += `<div class="bs-cell${isShip ? " ship" : ""}"></div>`;
+    }
+    html += `</div><p class="bs-fleet">Ships: ${SHIPS.map(s => "▤".repeat(s)).join("  ")}</p></div>`;
+    gameBoardEl.className = "game-board"; gameBoardEl.innerHTML = html;
+    setControls([
+      { label: "🎲 Randomize", onClick: () => { randomize(p); renderSetup(); } },
+      { label: "✓ Ready", primary: true, onClick: readySetup }
+    ]);
+  }
+  async function readySetup() {
+    if (setupIdx === 0) {
+      await showPass(1, `<b style="color:${players[0].color}">${escapeHTML(pname(0))}</b>'s fleet is set. Hand the phone to <b style="color:${players[1].color}">${escapeHTML(pname(1))}</b> to place theirs.`);
+      setupIdx = 1; renderSetup();
+    } else {
+      await showPass(0, `Both fleets ready! Hand the phone to <b style="color:${players[0].color}">${escapeHTML(pname(0))}</b> to fire the first shot. 🔥`);
+      phase = "battle"; current = 0; renderBattle();
+    }
+  }
+
+  /* ----- Battle ----- */
+  function shipsSunk(p) { return grids[p].ships.filter(s => s.hits >= s.len).length; }
+  function renderBattle() {
+    const opp = 1 - current;
+    const g = grids[opp];
+    gameNameEl.textContent = "🚢  Battleship";
+    setStatus(`${turnBadge(current)} <span style="font-weight:600">— fire at ${escapeHTML(pname(opp))}'s waters</span><div class="scores"><span>You've sunk ${shipsSunk(opp)} / ${SHIPS.length}</span></div>`);
+    let html = `<div class="bs-wrap"><div class="bs-grid">`;
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+      const m = g.marks[key(r, c)];
+      const cls = m === "hit" ? "hit" : m === "miss" ? "miss" : "fire";
+      html += `<div class="bs-cell ${cls}" data-r="${r}" data-c="${c}"></div>`;
+    }
+    html += `</div></div>`;
+    gameBoardEl.className = "game-board"; gameBoardEl.innerHTML = html;
+    gameBoardEl.querySelector(".bs-grid").onclick = e => { const cell = e.target.closest(".bs-cell"); if (cell && cell.dataset.r !== undefined) fire(+cell.dataset.r, +cell.dataset.c); };
+    setControls([{ label: "↺ Restart", onClick: init }]);
+  }
+  function fire(r, c) {
+    if (busy || phase !== "battle") return;
+    const opp = 1 - current, g = grids[opp], k = key(r, c);
+    if (g.marks[k]) return; // already fired here
+    const shipIdx = g.occ[k];
+    if (shipIdx !== undefined) {
+      g.marks[k] = "hit"; g.ships[shipIdx].hits++;
+      const sunk = g.ships[shipIdx].hits >= g.ships[shipIdx].len;
+      renderBattle();
+      if (grids[opp].ships.every(s => s.hits >= s.len)) { winner = current; return gameOver(); }
+      const verb = sunk ? `sank a ship` : `scored a hit`;
+      busy = true;
+      triggerSpin(opp, `${pname(current)} ${verb} on ${pname(opp)}! 💥 Spin to quiz ${pname(opp)}.`, () => { busy = false; nextTurn(); });
+    } else {
+      g.marks[k] = "miss"; renderBattle();
+      setStatus(`💧 Splash — miss!`);
+      busy = true;
+      setTimeout(() => { busy = false; nextTurn(); }, 650);
+    }
+  }
+  function nextTurn() { current = 1 - current; renderBattle(); }
+  function gameOver() {
+    phase = "over";
+    setStatus(`🏆 ${turnBadge(winner)} <span style="font-weight:700">sank the whole fleet!</span>`);
+    if (!reduceMotion) burstConfetti(players[winner].raw);
+    const loser = 1 - winner;
+    setControls([
+      { label: "Play again", primary: true, onClick: init }
+    ]);
+    setTimeout(() => triggerSpin(loser, `${pname(winner)} won Battleship! 🎉 One last question for ${pname(loser)}.`, () => {}), 800);
+  }
+  return { init };
+})();
 
 /* ============================================================
    Wiring
    ============================================================ */
-beginBtn.addEventListener("click", () => {
-  introOverlay.classList.remove("show");
-  ensureAudio();
-  setTimeout(() => spinBtn.focus(), 200);
-});
+beginBtn.addEventListener("click", () => { introOverlay.classList.remove("show"); ensureAudio(); });
+
+$("goWheel").addEventListener("click", () => openWheel({ mode: "solo" }));
+$("goGames").addEventListener("click", () => showScreen("gamesScreen"));
+$("gamesBack").addEventListener("click", () => showScreen("homeScreen"));
+$("gameBack").addEventListener("click", () => showScreen("gamesScreen"));
+
+$("p1name").addEventListener("input", e => { players[0].name = e.target.value.trim(); });
+$("p2name").addEventListener("input", e => { players[1].name = e.target.value.trim(); });
 
 spinBtn.addEventListener("click", spin);
 
-// Keyboard: Space / Enter spins. A focused <button> (e.g. Spin) activates
-// natively; this global handler adds "press Space/Enter anywhere" as long as
-// focus isn't on an interactive control and no overlay is open.
-document.addEventListener("keydown", (e) => {
-  if (e.code !== "Space" && e.code !== "Enter") return;
-  if (introOverlay.classList.contains("show") || cardOverlay.classList.contains("show")) return;
-  const ae = document.activeElement;
-  const interactive = ae && ["BUTTON", "A", "INPUT", "TEXTAREA", "SELECT"].includes(ae.tagName);
-  if (interactive) return; // let the focused control handle its own key
-  e.preventDefault();
-  spin();
+wheelBack.addEventListener("click", () => {
+  if (wheelMode === "solo") { closeWheel(); showScreen("homeScreen"); }
+  else { closeWheel(); const cb = gameOnDone; gameOnDone = null; if (cb) cb(); } // skip the question, resume game
 });
 
-passBtn.addEventListener("click", drawAnother);
-anotherBtn.addEventListener("click", drawAnother);
-spinAgainBtn.addEventListener("click", () => {
-  closeCard();
-  setTimeout(spin, reduceMotion ? 60 : 260);
+cardPassBtn.addEventListener("click", drawAnother);
+cardAnotherBtn.addEventListener("click", drawAnother);
+cardThirdBtn.addEventListener("click", () => {
+  if (wheelMode === "solo") { closeCard(); setTimeout(spin, reduceMotion ? 60 : 260); }
+  else { closeCard(); closeWheel(); const cb = gameOnDone; gameOnDone = null; if (cb) cb(); }
 });
 
 soundBtn.addEventListener("click", () => {
@@ -1247,17 +1444,23 @@ soundBtn.addEventListener("click", () => {
   if (soundOn) ensureAudio();
 });
 
-// Close card on backdrop tap / Escape
-cardOverlay.addEventListener("click", (e) => {
-  if (e.target === cardOverlay) closeCard();
-});
+// Keyboard: Space/Enter spins only while the wheel overlay is open and idle
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && cardOverlay.classList.contains("show")) closeCard();
+  if (e.code !== "Space" && e.code !== "Enter") return;
+  if (!wheelOverlay.classList.contains("show")) return;
+  if (cardOverlay.classList.contains("show") || spinning) return;
+  const ae = document.activeElement;
+  if (ae && ["BUTTON", "A", "INPUT", "TEXTAREA", "SELECT"].includes(ae.tagName)) return;
+  e.preventDefault(); spin();
 });
+
+// Escape / backdrop on the question card behaves like its third button
+cardOverlay.addEventListener("click", (e) => { if (e.target === cardOverlay) cardThirdBtn.click(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && cardOverlay.classList.contains("show")) cardThirdBtn.click(); });
 
 /* ---------- Init ---------- */
 buildWheel();
-// show the house-rules card on first load
+buildGameMenu();
 introOverlay.classList.add("show");
 setTimeout(() => beginBtn.focus(), 200);
 </script>
