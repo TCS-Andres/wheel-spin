@@ -1290,7 +1290,9 @@ const CK = (() => {
    GAME: Battleship (hit -> hit player answers)
    ============================================================ */
 const BS = (() => {
-  const SIZE = 10, SHIPS = [5, 4, 3, 3, 2];
+  // Russian "Морской бой" fleet: 1×4, 2×3, 3×2, 4×1 — and ships may not touch,
+  // even diagonally (enforced in placement below).
+  const SIZE = 10, SHIPS = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
   let grids, phase, setupIdx, current, winner, busy;
 
   function newGrid() { return { occ: {}, ships: [], marks: {} }; } // occ: cell->shipIdx, marks: cell->'hit'|'miss'
@@ -1301,33 +1303,38 @@ const BS = (() => {
     phase = "setup"; setupIdx = 0; current = 0; winner = null; busy = false;
     renderSetup();
   }
+  // Place the whole fleet; if a ship can't fit (no-touch gets tight), restart the grid.
   function randomize(p) {
-    const g = newGrid();
-    for (let s = 0; s < SHIPS.length; s++) {
-      const len = SHIPS[s]; let placed = false, tries = 0;
-      while (!placed && tries++ < 500) {
-        const horiz = Math.random() < 0.5;
-        const r = Math.floor(Math.random() * (horiz ? SIZE : SIZE - len + 1));
-        const c = Math.floor(Math.random() * (horiz ? SIZE - len + 1 : SIZE));
-        const cells = [];
-        let ok = true;
-        for (let i = 0; i < len; i++) {
-          const rr = horiz ? r : r + i, cc = horiz ? c + i : c;
-          // reject if the cell or any of its 8 neighbours already holds a ship (no touching)
-          for (let dr = -1; dr <= 1 && ok; dr++) for (let dc = -1; dc <= 1; dc++) {
-            const nr = rr + dr, nc = cc + dc;
-            if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && g.occ[key(nr, nc)] !== undefined) { ok = false; break; }
+    for (let attempt = 0; attempt < 400; attempt++) {
+      const g = newGrid();
+      let allPlaced = true;
+      for (let s = 0; s < SHIPS.length; s++) {
+        const len = SHIPS[s]; let placed = false, tries = 0;
+        while (!placed && tries++ < 400) {
+          const horiz = Math.random() < 0.5;
+          const r = Math.floor(Math.random() * (horiz ? SIZE : SIZE - len + 1));
+          const c = Math.floor(Math.random() * (horiz ? SIZE - len + 1 : SIZE));
+          const cells = [];
+          let ok = true;
+          for (let i = 0; i < len; i++) {
+            const rr = horiz ? r : r + i, cc = horiz ? c + i : c;
+            // reject if the cell or any of its 8 neighbours already holds a ship (no touching)
+            for (let dr = -1; dr <= 1 && ok; dr++) for (let dc = -1; dc <= 1; dc++) {
+              const nr = rr + dr, nc = cc + dc;
+              if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && g.occ[key(nr, nc)] !== undefined) { ok = false; break; }
+            }
+            if (!ok) break;
+            cells.push(key(rr, cc));
           }
-          if (!ok) break;
-          cells.push(key(rr, cc));
+          if (!ok) continue;
+          const idx = g.ships.length; g.ships.push({ cells, hits: 0, len });
+          cells.forEach(k => g.occ[k] = idx);
+          placed = true;
         }
-        if (!ok) continue;
-        const idx = g.ships.length; g.ships.push({ cells, hits: 0, len });
-        cells.forEach(k => g.occ[k] = idx);
-        placed = true;
+        if (!placed) { allPlaced = false; break; }
       }
+      if (allPlaced) { grids[p] = g; return; }
     }
-    grids[p] = g;
   }
 
   /* ----- Setup ----- */
