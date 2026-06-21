@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#FFF5F2" />
+<title>Closer — a question wheel for two</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg-1: #FFF5F2;
+    --bg-2: #FDEBF2;
+    --ink: #3a2c33;
+    --ink-soft: #6b5560;
+    --card-bg: #ffffff;
+    --accent: #E8455F;
+    --accent-2: #F4789B;
+    --shadow: 0 18px 40px -12px rgba(120, 50, 70, 0.35);
+    --shadow-sm: 0 6px 18px -8px rgba(120, 50, 70, 0.4);
+    --font-display: "Quicksand", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --radius: 22px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(16px, 4vw, 32px) 18px calc(28px + env(safe-area-inset-bottom));
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    text-align: center;
+    max-width: 460px;
+    margin-bottom: clamp(10px, 3vw, 22px);
+  }
+  header h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 6vw, 2.2rem);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, var(--accent), #B084CC);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  header p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: clamp(0.92rem, 3.4vw, 1.02rem);
+    line-height: 1.45;
+  }
+
+  /* ---------- Wheel ---------- */
+  .stage {
+    position: relative;
+    width: min(92vw, 460px);
+    aspect-ratio: 1;
+    margin: 10px auto 0;
+    display: grid;
+    place-items: center;
+    filter: drop-shadow(0 26px 40px rgba(120, 50, 70, 0.28));
+  }
+  .pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    filter: drop-shadow(0 5px 6px rgba(120, 40, 60, 0.4));
+    pointer-events: none;
+  }
+  .wheel-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    /* glossy outer ring */
+    background:
+      radial-gradient(circle at 50% 50%, transparent 0 86%, rgba(255,255,255,0.9) 86% 100%),
+      conic-gradient(from 0deg, #fff, #ffe7ef, #fff, #f6e0ff, #fff, #ffe7ef, #fff);
+    padding: clamp(10px, 2.6vw, 15px);
+    box-shadow:
+      inset 0 0 0 2px rgba(255,255,255,0.9),
+      inset 0 -6px 14px rgba(150, 70, 95, 0.18),
+      0 2px 4px rgba(255,255,255,0.8);
+  }
+  svg.wheel {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 50%;
+    box-shadow: inset 0 0 22px rgba(80, 30, 50, 0.25);
+  }
+  svg.wheel #rotor {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  /* Each label counter-rotates about its own center so it stays upright
+     no matter where the wheel stops — never sideways, never upside down. */
+  svg.wheel .lbl {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .seg-emoji {
+    font-size: 23px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
+  }
+  .seg-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    fill: #fff;
+    text-anchor: middle;
+    letter-spacing: 0.2px;
+    text-shadow: 0 1px 2px rgba(60,20,35,0.45), 0 0 2px rgba(60,20,35,0.35);
+  }
+  .hub {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 19%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 36% 30%, #ffffff, #ffd9e6 70%, #ffc2d6 100%);
+    box-shadow:
+      0 6px 14px rgba(150, 60, 85, 0.4),
+      inset 0 0 0 4px #fff,
+      inset 0 -3px 8px rgba(150, 60, 85, 0.25);
+    display: grid;
+    place-items: center;
+    font-size: clamp(1.2rem, 5.5vw, 1.7rem);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    margin-top: clamp(18px, 5vw, 30px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+    color: #fff;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn:focus-visible { outline: 3px solid #6C5CE7; outline-offset: 3px; }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+
+  .btn-spin {
+    font-size: clamp(1.15rem, 5vw, 1.4rem);
+    padding: 16px 56px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 12px 26px -8px rgba(232, 69, 95, 0.6);
+    letter-spacing: 0.4px;
+  }
+  .btn-spin:hover:not(:disabled) { box-shadow: 0 16px 30px -8px rgba(232, 69, 95, 0.7); }
+
+  .sound-toggle {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sound-toggle:hover { color: var(--ink); }
+  .sound-toggle:focus-visible { outline: 2px solid #6C5CE7; outline-offset: 2px; }
+
+  /* ---------- Overlays (intro + card) ---------- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(58, 30, 42, 0.42);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.32s ease;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+
+  .panel {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: 440px;
+    width: 100%;
+    padding: clamp(24px, 6vw, 34px);
+    text-align: center;
+    transform: scale(0.9) translateY(8px);
+    opacity: 0;
+    transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.36s ease;
+  }
+  .overlay.show .panel { transform: scale(1) translateY(0); opacity: 1; }
+
+  /* Intro card */
+  .intro h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 5.5vw, 1.7rem);
+    margin: 0 0 4px;
+  }
+  .intro .sub { color: var(--ink-soft); margin: 0 0 20px; font-size: 0.98rem; }
+  .rules { list-style: none; margin: 0 0 26px; padding: 0; text-align: left; }
+  .rules li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #fff6f9, #fdeef4);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    font-size: 0.98rem;
+    line-height: 1.4;
+  }
+  .rules li .ico { font-size: 1.25rem; line-height: 1.2; }
+
+  /* Question card */
+  .turn-line {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: #ffeef2;
+    padding: 7px 16px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  .cat-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .cat-emoji { font-size: 2rem; line-height: 1; }
+  .cat-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.25rem, 5vw, 1.55rem);
+    margin: 0;
+  }
+  .spice-meter {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin: 2px 0 0;
+    letter-spacing: 1px;
+  }
+  .question {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+    line-height: 1.45;
+    margin: 18px 4px 26px;
+    color: var(--ink);
+    font-weight: 600;
+    min-height: 2.6em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .question.swap { animation: qswap 0.32s ease; }
+  @keyframes qswap {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .card-actions .btn-spin-again { grid-column: 1 / -1; }
+  .btn-soft {
+    background: #f3eef1;
+    color: var(--ink);
+    padding: 13px 10px;
+    font-size: 0.98rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-soft:hover { background: #ece4e9; }
+  .btn-spin-again {
+    background: linear-gradient(135deg, #6C5CE7, #B084CC);
+    padding: 14px;
+    font-size: 1.02rem;
+    box-shadow: 0 10px 22px -8px rgba(108, 92, 231, 0.6);
+  }
+
+  /* Confetti */
+  #confetti {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+  }
+
+  .footnote {
+    margin-top: auto;
+    padding-top: 18px;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    opacity: 0.8;
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel, .overlay, .question.swap { transition-duration: 0.18s; animation: none; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>Closer</h1>
+    <p>A question wheel for two — spin it, land on a category, and let one honest question bring you a little closer.</p>
+  </header>
+
+  <main class="stage" id="stage" aria-hidden="false">
+    <svg class="pointer" width="46" height="50" viewBox="0 0 46 50" aria-hidden="true">
+      <defs>
+        <linearGradient id="pointerGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ff5e7a"/>
+          <stop offset="1" stop-color="#E8455F"/>
+        </linearGradient>
+      </defs>
+      <!-- rounded teardrop pin pointing down -->
+      <path d="M23 49 C12 33 4 26 4 16 A19 19 0 0 1 42 16 C42 26 34 33 23 49 Z" fill="url(#pointerGrad)"/>
+      <circle cx="23" cy="16" r="7.5" fill="#fff" opacity="0.95"/>
+      <circle cx="23" cy="16" r="3.4" fill="#E8455F"/>
+    </svg>
+    <div class="wheel-wrap">
+      <svg class="wheel" id="wheel" viewBox="0 0 300 300" role="img" aria-label="Wheel of question categories">
+        <g id="rotor"></g>
+      </svg>
+    </div>
+    <div class="hub" id="hub" aria-hidden="true">💞</div>
+  </main>
+
+  <div class="controls">
+    <button class="btn btn-spin" id="spinBtn" aria-describedby="spinHint">Spin</button>
+    <button class="sound-toggle" id="soundBtn" aria-pressed="true" title="Toggle tick sound">🔊 Sound on</button>
+    <span id="spinHint" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Press Enter or Space to spin the wheel.</span>
+  </div>
+
+  <p class="footnote">Both of you answer every question — the wheel just decides what you talk about.</p>
+
+  <!-- Intro / house rules -->
+  <div class="overlay" id="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+    <div class="panel intro">
+      <h2 id="introTitle">Before you spin 💞</h2>
+      <p class="sub">Three small things to keep this a good place to be honest.</p>
+      <ul class="rules">
+        <li><span class="ico">💬</span><span>Be honest — there are no wrong answers.</span></li>
+        <li><span class="ico">🤍</span><span>No judgment. This is a safe space for both of you.</span></li>
+        <li><span class="ico">⏭️</span><span>You can pass on any question, anytime.</span></li>
+      </ul>
+      <button class="btn btn-spin" id="beginBtn" style="width:100%">Begin</button>
+    </div>
+  </div>
+
+  <!-- Question card -->
+  <div class="overlay" id="cardOverlay" role="dialog" aria-modal="true" aria-labelledby="catName">
+    <div class="panel card">
+      <span class="turn-line" id="turnLine">You answer first</span>
+      <div class="cat-head">
+        <span class="cat-emoji" id="catEmoji">💗</span>
+        <h2 class="cat-name" id="catName">Heart to Heart</h2>
+      </div>
+      <p class="spice-meter" id="spiceMeter" hidden>🌶️ leans flirty 🌶️</p>
+      <p class="question" id="questionText" aria-live="polite"></p>
+      <div class="card-actions">
+        <button class="btn btn-soft" id="passBtn">⏭️ Pass</button>
+        <button class="btn btn-soft" id="anotherBtn">🔄 Another question</button>
+        <button class="btn btn-spin-again" id="spinAgainBtn">🎡 Spin again</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+/* ============================================================
+   Couples Question Wheel — "Closer"
+   Single-file, no dependencies. Data is the source of truth.
+   ============================================================ */
+
+const CATEGORIES = [
+  {
+    name: "Hot & Spicy",
+    emoji: "🔥",
+    color: "#E8455F",
+    questions: [
+      "What's the first thing you noticed about me physically?",
+      "What's something I do that you find irresistibly attractive?",
+      "Where's the most adventurous place you'd want to kiss me?",
+      "What outfit of mine do you love seeing me in the most?",
+      "Describe your idea of a perfect romantic night, start to finish.",
+      "What's a fantasy you've been a little shy to bring up?",
+      "What's your favorite way for me to flirt with you?",
+      "What's the most romantic moment we've shared so far?",
+      "What's a small gesture that instantly turns up the heat for you?",
+      "If we had the house to ourselves for 24 hours, how would you want to spend it?",
+      "What's something you'd love to try together that we haven't yet?",
+      "What part of your day do you most look forward to with me?",
+      "What's your favorite memory of us being close?",
+      "What song instantly puts you in a romantic mood?",
+      "What's the most attractive non-physical thing about me?",
+      "How do you most like to be pursued?",
+      "What's a compliment about your body you've always wanted to hear?",
+      "What's your love language when the lights go down?",
+      "On a getaway, where would you most want to be alone with me?",
+      "What's something flirty you wish I did more often?",
+      "What's your favorite kind of kiss?",
+      "When have you caught yourself thinking about me at an inconvenient time?",
+      "What makes you feel most desired?",
+      "What's the boldest thing you'd whisper to me in a crowded room?",
+      "What's your idea of the perfect slow dance?",
+      "What's something about our chemistry you can't quite explain?",
+      "What's a look I give you that you secretly love?",
+      "If you could relive one passionate moment with me, which one?",
+      "What's the most spontaneous romantic thing you'd want to do?",
+      "What's a tiny touch that means a lot to you?",
+      "What detail about me tends to stick in your memory?",
+      "What's something that always reignites the spark for you?"
+    ]
+  },
+  {
+    name: "Heart to Heart",
+    emoji: "💗",
+    color: "#F4789B",
+    questions: [
+      "When do you feel most loved by me?",
+      "What's something you've never told me but want to?",
+      "When have you felt closest to me?",
+      "What does feeling safe with someone mean to you?",
+      "What's a fear you have about us that you'd like to share?",
+      "What part of yourself do you hide from most people but show me?",
+      "What do I do that makes you feel truly seen?",
+      "When was the last time I made you feel proud to be with me?",
+      "What's something you need more of from me emotionally?",
+      "What's a moment you felt vulnerable with me and were glad you were?",
+      "What does 'home' feel like to you, and am I part of it?",
+      "What's a way I've helped you grow?",
+      "What's something about us you're grateful for but rarely say out loud?",
+      "When you're hurting, how do you most want me to show up?",
+      "What's a wound from your past that still shapes how you love?",
+      "What do you hope I never forget about you?",
+      "What's the bravest thing you've ever done for love?",
+      "What makes you feel emotionally distant, and how can I tell?",
+      "What's a part of our relationship you wish we protected more?",
+      "When did you first feel like you could fully be yourself with me?",
+      "What's something kind I said once that you still hold onto?",
+      "What does forgiveness look like to you?",
+      "What's a need of yours you find hard to ask for?",
+      "How do you most want to be comforted on your hardest days?",
+      "What's something about me you admire but don't say enough?",
+      "When do you feel most disconnected from me, and what helps?",
+      "What does emotional intimacy mean to you?",
+      "What's a dream you've been afraid to share with me?",
+      "What would make you feel more cherished day to day?",
+      "What's something you've forgiven me for that I may not even know about?",
+      "When have you felt most understood by me?",
+      "What do you most want us to be able to talk about more openly?"
+    ]
+  },
+  {
+    name: "The Deep End",
+    emoji: "🧠",
+    color: "#6C5CE7",
+    questions: [
+      "What's a pattern from your family you don't want to repeat?",
+      "What does a healthy disagreement look like to you?",
+      "How do you know you're stressed before you say anything?",
+      "What's a belief about relationships you absorbed growing up?",
+      "What tends to trigger a defensive reaction in you, and why?",
+      "How did your parents handle conflict, and how did it affect you?",
+      "What do you do when you feel criticized?",
+      "What's a story you tell yourself about your own worth?",
+      "When you shut down, what's usually going on underneath?",
+      "What does 'being a good partner' really mean to you?",
+      "What's something you're working on in yourself right now?",
+      "How do you tend to react when you feel ignored or left out?",
+      "What's a fear about yourself you'd rather I not see?",
+      "What helps you feel grounded when emotions run high?",
+      "What does trust have to look like for you to feel secure?",
+      "What's a way you've changed since we got together?",
+      "When do you feel most like your true self?",
+      "What's a recurring argument we have, and what do you think it's really about?",
+      "How do you most want us to repair after a fight?",
+      "What's an expectation you didn't realize you had until it wasn't met?",
+      "What do you need in order to feel respected?",
+      "How do you process disappointment?",
+      "What does emotional safety require from me?",
+      "What's a value of yours you'd never compromise on?",
+      "When you imagine us five years from now, what worries you?",
+      "What part of your childhood still influences your reactions today?",
+      "How do you want us to handle the differences in how we were raised?",
+      "What's a hard truth about yourself you've come to accept?",
+      "What does 'doing the work' in a relationship mean to you?",
+      "What's something you wish you understood better about yourself?",
+      "How do you want us to grow as a couple this year?",
+      "What would help you feel more like a team with me?"
+    ]
+  },
+  {
+    name: "Just for Fun",
+    emoji: "🎈",
+    color: "#FDB44B",
+    questions: [
+      "If we were a duo with a team name, what would it be?",
+      "What's the weirdest thing you'd do if you were invisible for a day?",
+      "If I were an animal, which one would I be?",
+      "What's the most ridiculous argument we've ever had?",
+      "If we got matching tattoos as a joke, what would they be?",
+      "What's a totally useless talent you secretly have?",
+      "If our life were a TV show, what genre would it be?",
+      "What's the silliest nickname you'd give me?",
+      "If you could read my mind for one hour, when would you choose?",
+      "What's the most embarrassing song on your playlist?",
+      "If we entered a competition together, which one would we win?",
+      "What's a food combination you love that grosses people out?",
+      "If we swapped bodies for a day, what's the first thing you'd do?",
+      "What's your go-to karaoke song?",
+      "If aliens landed and asked you to explain 'us,' what would you say?",
+      "What's the dumbest way you've ever injured yourself?",
+      "If we opened a business together, what would it be?",
+      "What's a fictional couple we remind you of?",
+      "If you could give me one superpower, what would it be?",
+      "What's the worst fashion phase you ever went through?",
+      "If our relationship had a theme song, what would it be?",
+      "What's something silly that always makes you laugh?",
+      "If we were stranded on an island, what's your survival role?",
+      "What's the most childish thing you still enjoy?",
+      "If you had to describe me in three emojis, which ones?",
+      "What's a gentle prank you'd love to pull on me?",
+      "If we had a mascot, what would it be?",
+      "What's the strangest dream you've had about me?",
+      "If you could rename me, what would my new name be?",
+      "What's a hill you'll die on that doesn't actually matter?",
+      "If our love had a flavor, what would it taste like?",
+      "What's the funniest thing that's happened on a date with me?"
+    ]
+  },
+  {
+    name: "Get to Know You",
+    emoji: "🌱",
+    color: "#2ECC8F",
+    questions: [
+      "What's a small thing that made you happy this week?",
+      "What did you want to be when you grew up?",
+      "What hobby would you pick up if you had unlimited time?",
+      "Who has influenced you the most in life?",
+      "What's something you're proud of that you rarely talk about?",
+      "What's your most-used app, and what does that say about you?",
+      "What's a book, show, or movie that changed how you think?",
+      "What's something you believed as a kid that you've since outgrown?",
+      "What's your ideal way to spend a day completely alone?",
+      "What's a skill you've always wanted to learn?",
+      "What's the best advice anyone ever gave you?",
+      "What's a tiny ritual that makes your day better?",
+      "Who in your life knows you best, and why?",
+      "What's something on your bucket list right now?",
+      "What's a place that feels like it belongs to you?",
+      "What do people misunderstand about you most?",
+      "What's a cause or issue you genuinely care about?",
+      "What's the most spontaneous thing you've ever done?",
+      "What's a compliment you received that stuck with you?",
+      "What's something you collect or have a soft spot for?",
+      "What's your relationship with your family like these days?",
+      "What's a moment you realized you were growing up?",
+      "What's something that always recharges you?",
+      "What's a fear you've mostly overcome?",
+      "What's the proudest moment of your life so far?",
+      "What's a question you wish people asked you more?",
+      "What's something you're curious about lately?",
+      "What's a friendship that shaped who you are?",
+      "What's your favorite way to be taken care of when you're sick?",
+      "What's a part of your routine you'd never give up?",
+      "What's something you've changed your mind about recently?",
+      "What makes you feel most like yourself?"
+    ]
+  },
+  {
+    name: "This or That",
+    emoji: "⚖️",
+    color: "#4AA8E0",
+    questions: [
+      "Beach vacation or mountain getaway?",
+      "Big party or quiet night in?",
+      "Early bird or night owl?",
+      "Sweet or savory?",
+      "Texting or calling?",
+      "Planner or go-with-the-flow?",
+      "City life or countryside?",
+      "Comedy or thriller?",
+      "Coffee or tea?",
+      "Save it or spend it?",
+      "Window seat or aisle seat?",
+      "Sunrise or sunset?",
+      "Spontaneous road trip or carefully planned itinerary?",
+      "Cook at home or eat out?",
+      "Books or podcasts?",
+      "Dogs or cats?",
+      "Summer or winter?",
+      "Loud and social or calm and cozy?",
+      "Lead the dance or follow?",
+      "Surprise gifts or pick your own?",
+      "Stay in your hometown or move somewhere new?",
+      "Mornings together or late nights together?",
+      "Big dreams or steady comfort?",
+      "Handwritten note or long voice message?",
+      "Adventurous food or stick to your favorites?",
+      "Concert or museum?",
+      "One big trip a year or lots of little ones?",
+      "Talk it out immediately or take space first?",
+      "Matching everything or your own style?",
+      "Live in the moment or plan for the future?",
+      "Movie at the theater or couch and a blanket?",
+      "Be the giver or the receiver of surprises?"
+    ]
+  },
+  {
+    name: "Dreams & Future",
+    emoji: "🌅",
+    color: "#FF8C5A",
+    questions: [
+      "Where do you picture us living in ten years?",
+      "What's a dream you want us to chase together?",
+      "What does your ideal ordinary day look like five years from now?",
+      "What tradition do you want us to start?",
+      "What's a place you want us to see before we're old?",
+      "What kind of home do you dream of making together?",
+      "What do you hope people say about our relationship?",
+      "What's a goal you want to hit this year, and how can I help?",
+      "If money were no object, what would our life look like?",
+      "What do you want to be doing for work in the future?",
+      "What does growing old together look like to you?",
+      "What's a milestone you're excited for us to reach?",
+      "What do you hope we never stop doing?",
+      "What kind of parents (or pet-parents) do you imagine us being?",
+      "What's a fear about the future you'd like us to face as a team?",
+      "What adventure should be next on our list?",
+      "What do you want our home to feel like to guests?",
+      "What's something you want to build or create in your lifetime?",
+      "What does success look like for you, beyond money?",
+      "What's a skill you want us to learn together?",
+      "What do you want our holidays to look like someday?",
+      "What's a promise you'd want us to keep no matter what?",
+      "Where do you want to celebrate our next big anniversary?",
+      "What legacy do you want to leave behind?",
+      "What's a version of us you're excited to become?",
+      "What do you hope stays exactly the same about us?",
+      "What's one big risk you'd take if I had your back?",
+      "What does retirement look like in your daydreams?",
+      "What's a cause we could champion together?",
+      "What do you want to teach the people who come after us?",
+      "If we wrote a five-year plan tonight, what's line one?",
+      "What future moment do you most look forward to sharing with me?"
+    ]
+  },
+  {
+    name: "Memory Lane",
+    emoji: "📸",
+    color: "#B084CC",
+    questions: [
+      "What's your favorite memory of our first date?",
+      "When did you realize you were falling for me?",
+      "What's a moment with me you replay often?",
+      "What's the first gift I gave you that you still think about?",
+      "What were your first impressions of me?",
+      "What's a trip or outing of ours you'd relive in a heartbeat?",
+      "What's something I did early on that won you over?",
+      "What's the funniest memory we share?",
+      "When did you first feel like 'we' were a real thing?",
+      "What's a hard time we got through that made us stronger?",
+      "What song reminds you of an early moment with us?",
+      "What's a tiny everyday memory of mine you treasure?",
+      "What's the most nervous I ever made you?",
+      "What did you tell your friends about me at the start?",
+      "What's a place that holds a special memory for us?",
+      "What's the best surprise I ever gave you?",
+      "When did you know you wanted this to last?",
+      "What's a photo of us that's your favorite, and why?",
+      "What's something about our beginning you miss?",
+      "What's the most thoughtful thing I've ever done for you?",
+      "What moment made you feel truly chosen by me?",
+      "What's a memory that makes you laugh every time?",
+      "What was the first inside joke we created?",
+      "What's a meal or food tied to a memory of us?",
+      "What's a milestone of ours you're most proud of?",
+      "What's something we did for the first time together?",
+      "What's the sweetest text I ever sent you?",
+      "When did you feel most supported by me?",
+      "What's an ordinary day with me you'd love to bottle up?",
+      "What's a memory you hope our future selves never forget?",
+      "What's the moment you knew I was different from anyone else?",
+      "If you made a highlight reel of us, what's the opening scene?"
+    ]
+  }
+];
+
+/* ---------- State ---------- */
+const SEG = CATEGORIES.length;          // 8
+const SEG_ANGLE = 360 / SEG;            // 45
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let rotation = 0;        // current absolute rotation of the wheel (deg, clockwise)
+let spinning = false;
+let currentCat = null;   // index of landed category
+let turnIndex = 0;       // alternates the "whose turn" line
+let soundOn = true;
+
+/* ---------- DOM ---------- */
+const rotor       = document.getElementById("rotor");
+const spinBtn     = document.getElementById("spinBtn");
+const soundBtn    = document.getElementById("soundBtn");
+const introOverlay= document.getElementById("introOverlay");
+const beginBtn    = document.getElementById("beginBtn");
+const cardOverlay = document.getElementById("cardOverlay");
+const turnLine    = document.getElementById("turnLine");
+const catEmoji    = document.getElementById("catEmoji");
+const catName     = document.getElementById("catName");
+const spiceMeter  = document.getElementById("spiceMeter");
+const questionText= document.getElementById("questionText");
+const passBtn     = document.getElementById("passBtn");
+const anotherBtn  = document.getElementById("anotherBtn");
+const spinAgainBtn= document.getElementById("spinAgainBtn");
+
+/* ============================================================
+   Geometry helpers — clock angle: 0° at top, increasing clockwise
+   ============================================================ */
+const CX = 150, CY = 150, R = 148;
+
+function pointOnCircle(angleDeg, radius) {
+  const a = (angleDeg) * Math.PI / 180;
+  return {
+    x: CX + radius * Math.sin(a),
+    y: CY - radius * Math.cos(a)
+  };
+}
+
+/* Split a multi-word label into two balanced lines so it fits the wedge. */
+function splitLabel(name) {
+  const words = name.split(" ");
+  if (words.length < 2) return [name];
+  // try every split point, keep the most balanced two lines
+  let best = [name], bestDiff = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(" ");
+    const b = words.slice(i).join(" ");
+    const diff = Math.abs(a.length - b.length);
+    if (diff < bestDiff) { bestDiff = diff; best = [a, b]; }
+  }
+  return best;
+}
+
+/* Mix a hex color toward white (amt>0) or black (amt<0) by fraction |amt|. */
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const target = amt < 0 ? 0 : 255;
+  const p = Math.abs(amt);
+  r = Math.round((target - r) * p + r);
+  g = Math.round((target - g) * p + g);
+  b = Math.round((target - b) * p + b);
+  return `rgb(${r},${g},${b})`;
+}
+
+/* ---------- Build the wheel ---------- */
+function buildWheel() {
+  const ns = "http://www.w3.org/2000/svg";
+  const wheel = document.getElementById("wheel");
+
+  // Per-segment radial gradients give each wedge a soft domed look.
+  const defs = document.createElementNS(ns, "defs");
+  CATEGORIES.forEach((cat, i) => {
+    const grad = document.createElementNS(ns, "radialGradient");
+    grad.setAttribute("id", `segGrad${i}`);
+    grad.setAttribute("cx", "50%");
+    grad.setAttribute("cy", "50%");
+    grad.setAttribute("r", "72%");
+    const stops = [
+      [0, shade(cat.color, 0.26)],
+      [0.62, cat.color],
+      [1, shade(cat.color, -0.14)]
+    ];
+    stops.forEach(([off, col]) => {
+      const s = document.createElementNS(ns, "stop");
+      s.setAttribute("offset", off);
+      s.setAttribute("stop-color", col);
+      grad.appendChild(s);
+    });
+    defs.appendChild(grad);
+  });
+  rotor.appendChild(defs);
+
+  CATEGORIES.forEach((cat, i) => {
+    const start = i * SEG_ANGLE;
+    const end = (i + 1) * SEG_ANGLE;
+    const p1 = pointOnCircle(start, R);
+    const p2 = pointOnCircle(end, R);
+
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", `M ${CX} ${CY} L ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${R} ${R} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} Z`);
+    path.setAttribute("fill", `url(#segGrad${i})`);
+    path.setAttribute("stroke", "rgba(255,255,255,0.9)");
+    path.setAttribute("stroke-width", "2");
+    path.setAttribute("stroke-linejoin", "round");
+    rotor.appendChild(path);
+
+    // Upright label stacked as one unit (emoji over a 2-line name), kept
+    // horizontal so the text always reads the same way — never upside down.
+    const mid = start + SEG_ANGLE / 2;
+    const emojiPos = pointOnCircle(mid, R * 0.73);
+    const namePos  = pointOnCircle(mid, R * 0.53);
+
+    const labelGroup = document.createElementNS(ns, "g");
+    labelGroup.setAttribute("class", "lbl");
+
+    const emoji = document.createElementNS(ns, "text");
+    emoji.setAttribute("class", "seg-emoji");
+    emoji.setAttribute("x", emojiPos.x.toFixed(2));
+    emoji.setAttribute("y", emojiPos.y.toFixed(2));
+    emoji.textContent = cat.emoji;
+    labelGroup.appendChild(emoji);
+
+    const lines = splitLabel(cat.name);
+    const nameText = document.createElementNS(ns, "text");
+    nameText.setAttribute("class", "seg-label");
+    nameText.setAttribute("x", namePos.x.toFixed(2));
+    nameText.setAttribute("y", namePos.y.toFixed(2));
+    nameText.setAttribute("font-size", "10.5");
+    nameText.setAttribute("dominant-baseline", "central");
+    lines.forEach((ln, li) => {
+      const tspan = document.createElementNS(ns, "tspan");
+      tspan.setAttribute("x", namePos.x.toFixed(2));
+      tspan.setAttribute("dy", li === 0 ? (lines.length > 1 ? "-0.58em" : "0") : "1.12em");
+      tspan.textContent = ln;
+      nameText.appendChild(tspan);
+    });
+    labelGroup.appendChild(nameText);
+    rotor.appendChild(labelGroup);
+  });
+
+  // crisp inner ring just inside the rim
+  const ring = document.createElementNS(ns, "circle");
+  ring.setAttribute("cx", CX); ring.setAttribute("cy", CY); ring.setAttribute("r", R - 1);
+  ring.setAttribute("fill", "none");
+  ring.setAttribute("stroke", "rgba(255,255,255,0.55)");
+  ring.setAttribute("stroke-width", "3");
+  rotor.appendChild(ring);
+
+  // golden pegs at each segment boundary
+  for (let i = 0; i < SEG; i++) {
+    const peg = pointOnCircle(i * SEG_ANGLE, R - 7);
+    const c = document.createElementNS(ns, "circle");
+    c.setAttribute("cx", peg.x.toFixed(2));
+    c.setAttribute("cy", peg.y.toFixed(2));
+    c.setAttribute("r", "3.1");
+    c.setAttribute("fill", "#FFE7A8");
+    c.setAttribute("stroke", "rgba(180,120,40,0.5)");
+    c.setAttribute("stroke-width", "0.8");
+    rotor.appendChild(c);
+  }
+
+  // Static glossy highlight (does NOT rotate) — a fixed light source up top.
+  const gloss = document.createElementNS(ns, "ellipse");
+  gloss.setAttribute("cx", CX);
+  gloss.setAttribute("cy", CY - R * 0.42);
+  gloss.setAttribute("rx", R * 0.66);
+  gloss.setAttribute("ry", R * 0.34);
+  gloss.setAttribute("fill", "rgba(255,255,255,0.16)");
+  gloss.setAttribute("pointer-events", "none");
+  wheel.appendChild(gloss); // appended after #rotor so it stays on top & fixed
+}
+
+/* ============================================================
+   No-repeat question logic — shuffle a queue per category,
+   pop until empty, then reshuffle.
+   ============================================================ */
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function nextQuestion(catIndex) {
+  const cat = CATEGORIES[catIndex];
+  if (!cat._queue || cat._queue.length === 0) {
+    cat._queue = shuffle(cat.questions.map((_, i) => i));
+  }
+  const idx = cat._queue.pop();
+  return cat.questions[idx];
+}
+
+/* ============================================================
+   Audio — tiny WebAudio tick + landing chime (optional)
+   ============================================================ */
+let audioCtx = null;
+function ensureAudio() {
+  if (!soundOn) return null;
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+function tick() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = "square";
+  o.frequency.value = 1500;
+  g.gain.setValueAtTime(0.0001, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+  o.connect(g).connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime + 0.06);
+}
+function chime() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  [659.25, 880].forEach((freq, i) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = freq;
+    const t = ctx.currentTime + i * 0.1;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.12, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+    o.connect(g).connect(ctx.destination);
+    o.start(t);
+    o.stop(t + 0.45);
+  });
+}
+
+/* ============================================================
+   Spin — driven by a CSS transition (compositor-driven, smooth,
+   and robust: it resolves via `transitionend` with a guaranteed
+   setTimeout fallback, so the spin never hangs even if the tab is
+   backgrounded mid-spin or rAF is throttled).
+
+   Land math: segment k's center sits at clock angle k*45 + 22.5.
+   We want that center under the top pointer (0°), so we drive
+   rotation R such that (-R) mod 360 falls inside segment k.
+   ============================================================ */
+const SPIN_BEZIER = [0.16, 1, 0.3, 1]; // ease-out: fast start, long settle
+
+function landedIndexFor(rot) {
+  const atTop = ((-rot) % 360 + 360) % 360; // original clock angle now under pointer
+  return Math.floor(atTop / SEG_ANGLE) % SEG;
+}
+
+let tickTimers = [];
+function clearTicks() { tickTimers.forEach(clearTimeout); tickTimers = []; }
+
+// One bezier coordinate at parameter s (control points 0, c1, c2, 1).
+function bezAt(s, c1, c2) {
+  const u = 1 - s;
+  return 3 * u * u * s * c1 + 3 * u * s * s * c2 + s * s * s;
+}
+// Given a progress fraction (the y of the easing curve), return the
+// elapsed-time fraction (the x) — used to align ticks with the visual.
+function timeFractionForProgress(y) {
+  const [x1, y1, x2, y2] = SPIN_BEZIER;
+  let lo = 0, hi = 1, s = y;
+  for (let i = 0; i < 24; i++) {
+    s = (lo + hi) / 2;
+    (bezAt(s, y1, y2) < y) ? (lo = s) : (hi = s);
+  }
+  return bezAt(s, x1, x2);
+}
+// Schedule a tick each time the wheel crosses a segment boundary
+// (rotation passing a multiple of 45°), eased to match the motion.
+function scheduleTicks(startRot, endRot, duration) {
+  clearTicks();
+  if (reduceMotion) return;
+  const span = endRot - startRot;
+  if (span <= 0) return;
+  const firstB = Math.floor(startRot / SEG_ANGLE) + 1;
+  const lastB = Math.floor(endRot / SEG_ANGLE);
+  for (let b = firstB; b <= lastB; b++) {
+    const frac = (b * SEG_ANGLE - startRot) / span;     // progress when boundary hits pointer
+    const t = timeFractionForProgress(frac) * duration; // eased elapsed time
+    tickTimers.push(setTimeout(tick, t));
+  }
+}
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+  spinBtn.disabled = true;
+  ensureAudio(); // unlock audio on the user gesture
+
+  // pick target segment, then aim its center under the pointer with a little jitter
+  const target = Math.floor(Math.random() * SEG);
+  const targetCenter = target * SEG_ANGLE + SEG_ANGLE / 2;
+  const jitter = (Math.random() * 2 - 1) * (SEG_ANGLE / 2 - 6); // stay clear of borders
+  const desiredMod = ((360 - (targetCenter + jitter)) % 360 + 360) % 360;
+
+  const currentMod = ((rotation % 360) + 360) % 360;
+  const delta = (desiredMod - currentMod + 360) % 360;
+
+  const fullSpins = reduceMotion ? 0 : (4 + Math.floor(Math.random() * 3)); // 4–6
+  const startRot = rotation;
+  const endRot = startRot + fullSpins * 360 + delta + (reduceMotion ? 0 : 360);
+  const duration = reduceMotion ? 400 : 4600;
+
+  rotation = endRot; // logical destination; read in finishSpin()
+
+  // The wheel rotates to endRot; each label counter-rotates to -endRot about
+  // its own center, so labels stay upright the whole way and at the stop.
+  const labels = rotor.querySelectorAll(".lbl");
+  const transition = `transform ${duration}ms cubic-bezier(${SPIN_BEZIER.join(",")})`;
+
+  // Force a reflow so the browser registers the starting transforms (no snap).
+  rotor.style.transition = "none";
+  labels.forEach(l => l.style.transition = "none");
+  void rotor.getBoundingClientRect();
+
+  rotor.style.transition = transition;
+  rotor.style.transform = `rotate(${endRot}deg)`;
+  labels.forEach(l => {
+    l.style.transition = transition;
+    l.style.transform = `rotate(${-endRot}deg)`;
+  });
+
+  scheduleTicks(startRot, endRot, duration);
+
+  // Resolve exactly once — whichever of transitionend / fallback fires first.
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    rotor.removeEventListener("transitionend", finish);
+    clearTimeout(fallback);
+    rotor.style.transition = "none";
+    labels.forEach(l => l.style.transition = "none");
+    finishSpin();
+  };
+  rotor.addEventListener("transitionend", finish);
+  const fallback = setTimeout(finish, duration + 250);
+}
+
+function finishSpin() {
+  spinning = false;
+  spinBtn.disabled = false;
+  currentCat = landedIndexFor(rotation);
+  chime();
+  if (!reduceMotion) burstConfetti(CATEGORIES[currentCat].color);
+  showCard(currentCat);
+}
+
+/* ============================================================
+   Question card
+   ============================================================ */
+// Alternate who answers first — flips on every question shown (spin, Pass, Another)
+function advanceTurnLine() {
+  turnLine.textContent = (turnIndex % 2 === 0) ? "You answer first" : "Your partner answers first";
+  turnIndex++;
+}
+
+function showCard(catIndex) {
+  const cat = CATEGORIES[catIndex];
+
+  catEmoji.textContent = cat.emoji;
+  catName.textContent = cat.name;
+  spiceMeter.hidden = (cat.name !== "Hot & Spicy");
+
+  advanceTurnLine();
+  setQuestion(nextQuestion(catIndex));
+  cardOverlay.classList.add("show");
+  // focus a safe action for keyboard users
+  setTimeout(() => spinAgainBtn.focus(), 120);
+}
+
+function setQuestion(text) {
+  questionText.textContent = text;
+  questionText.classList.remove("swap");
+  // restart the swap animation
+  void questionText.offsetWidth;
+  questionText.classList.add("swap");
+}
+
+function drawAnother() {
+  if (currentCat === null) return;
+  advanceTurnLine();
+  setQuestion(nextQuestion(currentCat));
+}
+
+function closeCard() {
+  cardOverlay.classList.remove("show");
+}
+
+/* ============================================================
+   Confetti — lightweight, self-contained
+   ============================================================ */
+const confettiCanvas = document.getElementById("confetti");
+const cctx = confettiCanvas.getContext("2d");
+let confettiParticles = [];
+let confettiRAF = null;
+let confettiSafety = null;
+
+function sizeConfetti() {
+  confettiCanvas.width = window.innerWidth * devicePixelRatio;
+  confettiCanvas.height = window.innerHeight * devicePixelRatio;
+  cctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+sizeConfetti();
+window.addEventListener("resize", sizeConfetti);
+
+function burstConfetti(tint) {
+  const palette = [tint, "#ffffff", "#FFD36E", "#F4789B", "#6C5CE7"];
+  const w = window.innerWidth;
+  for (let i = 0; i < 90; i++) {
+    confettiParticles.push({
+      x: w / 2 + (Math.random() - 0.5) * 120,
+      y: window.innerHeight * 0.32,
+      vx: (Math.random() - 0.5) * 9,
+      vy: Math.random() * -11 - 4,
+      g: 0.32 + Math.random() * 0.1,
+      size: 5 + Math.random() * 6,
+      rot: Math.random() * Math.PI,
+      vrot: (Math.random() - 0.5) * 0.3,
+      color: palette[Math.floor(Math.random() * palette.length)],
+      life: 1
+    });
+  }
+  if (!confettiRAF) confettiRAF = requestAnimationFrame(stepConfetti);
+  // Safety: guarantee the canvas clears even if rAF is throttled (background tab).
+  clearTimeout(confettiSafety);
+  confettiSafety = setTimeout(() => {
+    confettiParticles = [];
+    cctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  }, 3000);
+}
+
+function stepConfetti() {
+  cctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  confettiParticles.forEach(p => {
+    p.vy += p.g;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.vrot;
+    p.life -= 0.012;
+    cctx.save();
+    cctx.globalAlpha = Math.max(p.life, 0);
+    cctx.translate(p.x, p.y);
+    cctx.rotate(p.rot);
+    cctx.fillStyle = p.color;
+    cctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+    cctx.restore();
+  });
+  confettiParticles = confettiParticles.filter(p => p.life > 0 && p.y < window.innerHeight + 40);
+  if (confettiParticles.length) {
+    confettiRAF = requestAnimationFrame(stepConfetti);
+  } else {
+    cctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    confettiRAF = null;
+  }
+}
+
+/* ============================================================
+   Wiring
+   ============================================================ */
+beginBtn.addEventListener("click", () => {
+  introOverlay.classList.remove("show");
+  ensureAudio();
+  setTimeout(() => spinBtn.focus(), 200);
+});
+
+spinBtn.addEventListener("click", spin);
+
+// Keyboard: Space / Enter spins. A focused <button> (e.g. Spin) activates
+// natively; this global handler adds "press Space/Enter anywhere" as long as
+// focus isn't on an interactive control and no overlay is open.
+document.addEventListener("keydown", (e) => {
+  if (e.code !== "Space" && e.code !== "Enter") return;
+  if (introOverlay.classList.contains("show") || cardOverlay.classList.contains("show")) return;
+  const ae = document.activeElement;
+  const interactive = ae && ["BUTTON", "A", "INPUT", "TEXTAREA", "SELECT"].includes(ae.tagName);
+  if (interactive) return; // let the focused control handle its own key
+  e.preventDefault();
+  spin();
+});
+
+passBtn.addEventListener("click", drawAnother);
+anotherBtn.addEventListener("click", drawAnother);
+spinAgainBtn.addEventListener("click", () => {
+  closeCard();
+  setTimeout(spin, reduceMotion ? 60 : 260);
+});
+
+soundBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  soundBtn.setAttribute("aria-pressed", String(soundOn));
+  soundBtn.textContent = soundOn ? "🔊 Sound on" : "🔈 Sound off";
+  if (soundOn) ensureAudio();
+});
+
+// Close card on backdrop tap / Escape
+cardOverlay.addEventListener("click", (e) => {
+  if (e.target === cardOverlay) closeCard();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && cardOverlay.classList.contains("show")) closeCard();
+});
+
+/* ---------- Init ---------- */
+buildWheel();
+// show the house-rules card on first load
+introOverlay.classList.add("show");
+setTimeout(() => beginBtn.focus(), 200);
+</script>
+</body>
+</html>
