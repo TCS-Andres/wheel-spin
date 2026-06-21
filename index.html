@@ -109,15 +109,17 @@
   svg.wheel #rotor {
     transform-box: fill-box;
     transform-origin: center;
+    will-change: transform;       /* promote to its own layer for a smoother spin */
   }
   /* Each label counter-rotates about its own center so it stays upright
      no matter where the wheel stops — never sideways, never upside down. */
   svg.wheel .lbl {
     transform-box: fill-box;
     transform-origin: center;
+    will-change: transform;
   }
   .seg-emoji {
-    font-size: 23px;
+    font-size: 20px;
     text-anchor: middle;
     dominant-baseline: central;
     filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
@@ -843,33 +845,37 @@ function buildWheel() {
     path.setAttribute("stroke-linejoin", "round");
     rotor.appendChild(path);
 
-    // Upright label stacked as one unit (emoji over a 2-line name), kept
-    // horizontal so the text always reads the same way — never upside down.
+    // Label as one upright unit: emoji directly ABOVE a 2-line name, centred
+    // on the segment's bisector. Because the group counter-rotates to stay
+    // upright, this stack reads identically on every segment — emoji on top,
+    // name below, never sideways or upside down.
     const mid = start + SEG_ANGLE / 2;
-    const emojiPos = pointOnCircle(mid, R * 0.73);
-    const namePos  = pointOnCircle(mid, R * 0.53);
+    const center = pointOnCircle(mid, R * 0.62);
+    const lx = center.x;
+    const emojiY = center.y - 15;
+    const nameY  = center.y + 12;
 
     const labelGroup = document.createElementNS(ns, "g");
     labelGroup.setAttribute("class", "lbl");
 
     const emoji = document.createElementNS(ns, "text");
     emoji.setAttribute("class", "seg-emoji");
-    emoji.setAttribute("x", emojiPos.x.toFixed(2));
-    emoji.setAttribute("y", emojiPos.y.toFixed(2));
+    emoji.setAttribute("x", lx.toFixed(2));
+    emoji.setAttribute("y", emojiY.toFixed(2));
     emoji.textContent = cat.emoji;
     labelGroup.appendChild(emoji);
 
     const lines = splitLabel(cat.name);
     const nameText = document.createElementNS(ns, "text");
     nameText.setAttribute("class", "seg-label");
-    nameText.setAttribute("x", namePos.x.toFixed(2));
-    nameText.setAttribute("y", namePos.y.toFixed(2));
-    nameText.setAttribute("font-size", "10.5");
+    nameText.setAttribute("x", lx.toFixed(2));
+    nameText.setAttribute("y", nameY.toFixed(2));
+    nameText.setAttribute("font-size", "10");
     nameText.setAttribute("dominant-baseline", "central");
     lines.forEach((ln, li) => {
       const tspan = document.createElementNS(ns, "tspan");
-      tspan.setAttribute("x", namePos.x.toFixed(2));
-      tspan.setAttribute("dy", li === 0 ? (lines.length > 1 ? "-0.58em" : "0") : "1.12em");
+      tspan.setAttribute("x", lx.toFixed(2));
+      tspan.setAttribute("dy", li === 0 ? (lines.length > 1 ? "-0.58em" : "0") : "1.14em");
       tspan.textContent = ln;
       nameText.appendChild(tspan);
     });
@@ -985,7 +991,9 @@ function chime() {
    We want that center under the top pointer (0°), so we drive
    rotation R such that (-R) mod 360 falls inside segment k.
    ============================================================ */
-const SPIN_BEZIER = [0.16, 1, 0.3, 1]; // ease-out: fast start, long settle
+// easeOutQuart — responsive start with a smooth, gradual settle (less abrupt
+// and less "creep" at the end than a steep expo curve).
+const SPIN_BEZIER = [0.17, 0.84, 0.32, 1];
 
 function landedIndexFor(rot) {
   const atTop = ((-rot) % 360 + 360) % 360; // original clock angle now under pointer
@@ -1042,10 +1050,10 @@ function spin() {
   const currentMod = ((rotation % 360) + 360) % 360;
   const delta = (desiredMod - currentMod + 360) % 360;
 
-  const fullSpins = reduceMotion ? 0 : (4 + Math.floor(Math.random() * 3)); // 4–6
+  const fullSpins = reduceMotion ? 0 : (5 + Math.floor(Math.random() * 2)); // 5–6
   const startRot = rotation;
   const endRot = startRot + fullSpins * 360 + delta + (reduceMotion ? 0 : 360);
-  const duration = reduceMotion ? 400 : 4600;
+  const duration = reduceMotion ? 400 : 5000;
 
   rotation = endRot; // logical destination; read in finishSpin()
 
