@@ -27,6 +27,7 @@
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; }
 
   body {
@@ -277,6 +278,35 @@
 
   .footnote { margin-top: auto; padding-top: 18px; color: var(--ink-soft); font-size: 0.78rem; opacity: 0.8; text-align: center; }
 
+  /* ---------- Online lobby ---------- */
+  .mode-toggle { display: inline-flex; background: #f3e6ec; border-radius: 999px; padding: 4px; gap: 4px; margin-bottom: 16px; }
+  .seg { border: none; background: transparent; cursor: pointer; font-family: var(--font-display); font-weight: 700; font-size: 0.92rem; color: var(--ink-soft); padding: 8px 18px; border-radius: 999px; transition: background 0.2s, color 0.2s; }
+  .seg.active { background: #fff; color: var(--accent); box-shadow: var(--shadow-sm); }
+  .mode-panel { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  .solo-name { font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 5px; width: 100%; max-width: 280px; margin-bottom: 16px; }
+  .solo-name input, .join-input { font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--ink); border: 2px solid #f0dfe6; border-radius: 12px; padding: 10px 12px; background: #fff; width: 100%; }
+  .solo-name input:focus, .join-input:focus { outline: none; border-color: var(--accent-2); }
+  .online-choose { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .online-sub { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 8px; }
+  .join-input { max-width: 320px; }
+  .share-row { display: flex; gap: 8px; width: 100%; max-width: 360px; }
+  .share-row input { flex: 1; font-family: var(--font-body); font-size: 0.85rem; color: var(--ink); border: 2px solid #f0dfe6; border-radius: 12px; padding: 10px 12px; background: #fff; min-width: 0; }
+  .muted { color: var(--ink-soft); font-size: 0.9rem; text-align: center; }
+
+  /* ---------- Connection chip + toast ---------- */
+  .conn-chip { position: fixed; top: calc(10px + env(safe-area-inset-top)); right: 12px; z-index: 26; background: #fff; border-radius: 999px; padding: 6px 14px; font-family: var(--font-display); font-weight: 700; font-size: 0.78rem; color: var(--ink); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px; }
+  .conn-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #2ECC8F; }
+  .toast { position: fixed; bottom: calc(22px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 40; background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow); max-width: 90vw; text-align: center; }
+  .wheel-wait { font-family: var(--font-display); font-weight: 700; color: var(--ink-soft); font-size: 1rem; text-align: center; padding: 14px 8px; }
+
+  /* ---------- Battleship online dual board ---------- */
+  .bs-board-label { font-family: var(--font-display); font-weight: 700; font-size: 0.86rem; color: var(--ink-soft); margin: 2px 0 4px; text-align: center; }
+  .bs-grid.small { width: min(70vw, 240px); }
+  .bs-grid.mine .bs-cell.ship { background: #7d8a99; }
+  .turn-hint { font-weight: 700; }
+  .turn-hint.mine { color: #2ECC8F; }
+  .turn-hint.theirs { color: var(--ink-soft); }
+
   @media (prefers-reduced-motion: reduce) {
     .panel, .overlay, .wheel-screen, .question.swap, .ck-piece, .c4-cell .disc { transition-duration: 0.18s; animation: none !important; }
   }
@@ -307,12 +337,58 @@
   <section class="screen" id="gamesScreen">
     <button class="ghost-back" id="gamesBack">‹ Home</button>
     <h2 class="screen-title">Game night 🎮</h2>
-    <p class="screen-sub">Pick a game. Land a hit, capture a piece, or win a round — and the wheel pops up with a question for whoever's on the receiving end.</p>
-    <div class="players-setup">
-      <label class="p1">Player 1<input id="p1name" maxlength="14" placeholder="Player 1" /></label>
-      <label class="p2">Player 2<input id="p2name" maxlength="14" placeholder="Player 2" /></label>
+
+    <div class="mode-toggle" role="tablist">
+      <button class="seg active" id="modeLocal" role="tab">📱 Same phone</button>
+      <button class="seg" id="modeOnline" role="tab">🌐 Online</button>
     </div>
-    <div class="game-grid" id="gameMenu"></div>
+
+    <!-- LOCAL -->
+    <div id="localPanel" class="mode-panel">
+      <p class="screen-sub">Pass one phone back and forth. Land a hit, capture a piece, or win a round — and the wheel pops up for whoever's on the receiving end.</p>
+      <div class="players-setup">
+        <label class="p1">Player 1<input id="p1name" maxlength="14" placeholder="Player 1" /></label>
+        <label class="p2">Player 2<input id="p2name" maxlength="14" placeholder="Player 2" /></label>
+      </div>
+      <div class="game-grid" id="gameMenu"></div>
+    </div>
+
+    <!-- ONLINE -->
+    <div id="onlinePanel" class="mode-panel" hidden>
+      <p class="screen-sub">Play on two devices. One of you creates a game and shares the link; the other opens it. Each phone shows only your own side.</p>
+      <label class="solo-name">Your name<input id="myName" maxlength="14" placeholder="You" /></label>
+
+      <div id="onlineChoose" class="online-choose">
+        <button class="btn-mini primary" id="createGameBtn">➕ Create a game</button>
+        <button class="btn-mini" id="joinGameBtn">🔗 Join with a link</button>
+      </div>
+
+      <div id="createPanel" class="online-sub" hidden>
+        <p class="screen-sub">Pick a game to host:</p>
+        <div class="game-grid" id="onlineGameMenu"></div>
+        <button class="btn-mini" id="createBack">‹ Back</button>
+      </div>
+
+      <div id="waitPanel" class="online-sub" hidden>
+        <p class="screen-sub">Share this link with your partner:</p>
+        <div class="share-row">
+          <input id="shareLink" readonly />
+          <button class="btn-mini primary" id="copyLink">Copy</button>
+        </div>
+        <p class="muted" id="waitMsg">Waiting for your partner to join…</p>
+        <button class="btn-mini" id="cancelHost">Cancel</button>
+      </div>
+
+      <div id="joinPanel" class="online-sub" hidden>
+        <p class="screen-sub">Paste the link your partner sent:</p>
+        <input id="joinCode" class="join-input" placeholder="paste link or code" />
+        <div class="online-choose">
+          <button class="btn-mini primary" id="connectBtn">Connect</button>
+          <button class="btn-mini" id="joinBack">‹ Back</button>
+        </div>
+        <p class="muted" id="joinStatus"></p>
+      </div>
+    </div>
   </section>
 
   <!-- ===================== GAME SCREEN ===================== -->
@@ -350,6 +426,7 @@
     </main>
     <div class="controls">
       <button class="btn btn-spin" id="spinBtn">Spin</button>
+      <div class="wheel-wait" id="wheelWait" style="display:none"></div>
       <button class="sound-toggle" id="soundBtn" aria-pressed="true" title="Toggle tick sound">🔊 Sound on</button>
     </div>
   </div>
@@ -398,6 +475,10 @@
 
   <canvas id="confetti" aria-hidden="true"></canvas>
 
+  <div class="conn-chip" id="connChip" hidden></div>
+  <div class="toast" id="toast" hidden></div>
+
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
 <script>
 /* ============================================================
    Closer — question wheel + two-player game night (single file)
@@ -736,6 +817,7 @@ const cardOverlay = $("cardOverlay"), turnLine = $("turnLine"), catEmoji = $("ca
 const cardPassBtn = $("cardPassBtn"), cardAnotherBtn = $("cardAnotherBtn"), cardThirdBtn = $("cardThirdBtn");
 const passOverlay = $("passOverlay"), passTitle = $("passTitle"), passText = $("passText"), passReadyBtn = $("passReadyBtn");
 const gameBoardEl = $("gameBoard"), gameStatusEl = $("gameStatus"), gameControlsEl = $("gameControls"), gameNameEl = $("gameName");
+const wheelWait = $("wheelWait"), connChip = $("connChip"), toastEl = $("toast");
 
 /* ============================================================
    Router
@@ -743,6 +825,136 @@ const gameBoardEl = $("gameBoard"), gameStatusEl = $("gameStatus"), gameControls
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
   window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   Online (peer-to-peer via PeerJS) — both peers run the
+   deterministic games in lockstep; the wheel's RNG/question is
+   chosen by the controller and shared so both land identically.
+   Battleship keeps each fleet on its own device and exchanges shots.
+   ============================================================ */
+let online = false, isHost = false, myIndex = 0;
+let peer = null, conn = null, connected = false, joiningAsHost = false, hostGame = null;
+let toastTimer = null;
+
+function myName() {
+  const v = ($("myName").value || "").trim();
+  return v || (joiningAsHost ? "Player 1" : "Player 2");
+}
+const Net = { send(o) { if (conn && conn.open) { try { conn.send(o); } catch (e) {} } } };
+
+function resetPeer() {
+  try { if (conn) conn.close(); } catch (e) {}
+  try { if (peer) peer.destroy(); } catch (e) {}
+  peer = null; conn = null; connected = false;
+}
+function parseId(s) {
+  s = (s || "").trim();
+  const m = s.match(/#j=([^\s&]+)/);
+  return m ? m[1] : (s || null);
+}
+function shareableFor(id) { return location.origin + location.pathname + "#j=" + id; }
+
+function hostCreate(game) {
+  if (typeof Peer === "undefined") { $("waitMsg").textContent = "Couldn't load the networking library. Check your connection."; return; }
+  hostGame = game; joiningAsHost = true;
+  resetPeer();
+  showOnlineSub("waitPanel");
+  $("shareLink").value = "creating your link…";
+  $("waitMsg").textContent = "Waiting for your partner to join…";
+  peer = new Peer();
+  peer.on("open", id => { $("shareLink").value = shareableFor(id); });
+  peer.on("error", e => { $("waitMsg").textContent = "Connection error (" + (e && e.type || e) + "). Tap Cancel and try again."; });
+  peer.on("connection", c => { conn = c; wireConn(); });
+}
+function guestConnect(raw) {
+  const id = parseId(raw);
+  if (!id) { $("joinStatus").textContent = "Paste the link or code first."; return; }
+  if (typeof Peer === "undefined") { $("joinStatus").textContent = "Couldn't load the networking library. Check your connection."; return; }
+  joiningAsHost = false;
+  resetPeer();
+  $("joinStatus").textContent = "Connecting…";
+  peer = new Peer();
+  peer.on("open", () => { conn = peer.connect(id, { reliable: true }); wireConn(); });
+  peer.on("error", e => { $("joinStatus").textContent = "Couldn't connect (" + (e && e.type || e) + "). Check the link and try again."; });
+}
+function wireConn() {
+  conn.on("open", () => {
+    connected = true;
+    if (!joiningAsHost) Net.send({ t: "hello", name: myName() });
+  });
+  conn.on("data", onNetData);
+  conn.on("close", onPeerLost);
+  conn.on("error", onPeerLost);
+}
+
+function onNetData(d) {
+  if (!d || !d.t) return;
+  switch (d.t) {
+    case "hello": // host receives guest's name → start the game for both
+      players[1].name = (d.name || "Player 2"); players[0].name = myName();
+      Net.send({ t: "start", game: hostGame, hostName: players[0].name });
+      beginOnline(true, hostGame);
+      break;
+    case "start": // guest receives the chosen game + host name
+      players[0].name = (d.hostName || "Player 1"); players[1].name = myName();
+      beginOnline(false, d.game);
+      break;
+    case "mv": if (activeGame === d.g && GAMES[d.g].net) GAMES[d.g].net(d); break;
+    case "ctrl": if (activeGame === d.g && GAMES[d.g].ctrl) GAMES[d.g].ctrl(d.a); break;
+    case "bs": if (activeGame === "battleship") BS.net(d); break;
+    case "wheel": onRemoteWheel(d); break;
+    case "bye": onPeerLost(); break;
+  }
+}
+
+function beginOnline(asHost, game) {
+  online = true; isHost = asHost; myIndex = asHost ? 0 : 1; connected = true;
+  showScreen("gamesScreen"); // reset lobby visibility for next time
+  hideOnlineSubs();
+  activeGame = game;
+  gameNameEl.textContent = GAMES[game].emoji + "  " + GAMES[game].title + "  ·  🌐";
+  showScreen("gameScreen");
+  setConnChip(true);
+  GAMES[game].init();
+}
+
+function onPeerLost() {
+  if (!online) { resetPeer(); return; }
+  online = false; connected = false;
+  resetPeer();
+  cardOverlay.classList.remove("show");
+  wheelOverlay.classList.remove("show");
+  passOverlay.classList.remove("show");
+  setConnChip(false);
+  showToast("Partner disconnected — back to the menu.");
+  showScreen("gamesScreen");
+}
+
+function setConnChip(on) {
+  if (on) { connChip.hidden = false; connChip.innerHTML = `<span class="dot"></span> Online with ${escapeHTML(pname(1 - myIndex))}`; }
+  else { connChip.hidden = true; }
+}
+function showToast(msg) {
+  toastEl.textContent = msg; toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, 3500);
+}
+
+/* ----- Lobby panel visibility ----- */
+function showOnlineSub(id) {
+  hideOnlineSubs();
+  $("onlineChoose").style.display = "none";
+  $(id).hidden = false;
+}
+function hideOnlineSubs() {
+  ["createPanel", "waitPanel", "joinPanel"].forEach(p => $(p).hidden = true);
+  $("onlineChoose").style.display = "";
+}
+function leaveOnline() {
+  resetPeer();
+  online = false; connected = false;
+  setConnChip(false);
 }
 
 /* ============================================================
@@ -894,10 +1106,9 @@ function scheduleTicks(startRot, endRot, duration) {
     tickTimers.push(setTimeout(tick, timeFractionForProgress(frac) * duration));
   }
 }
-function spin() {
-  if (spinning) return;
-  spinning = true; spinBtn.disabled = true; ensureAudio();
-
+/* Compute the spin (RNG + landed question) once; split from animation so two
+   online peers can share identical params and land on the same question. */
+function computeSpin() {
   const target = Math.floor(Math.random() * SEG);
   const targetCenter = target * SEG_ANGLE + SEG_ANGLE / 2;
   const jitter = (Math.random() * 2 - 1) * (SEG_ANGLE / 2 - 6);
@@ -907,55 +1118,78 @@ function spin() {
   const fullSpins = reduceMotion ? 0 : (5 + Math.floor(Math.random() * 2));
   const startRot = rotation;
   const endRot = startRot + fullSpins * 360 + delta + (reduceMotion ? 0 : 360);
+  const catIndex = landedIndexFor(endRot);
+  return { startRot, endRot, catIndex, qText: nextQuestion(catIndex) };
+}
+function animateSpin(p) {
+  if (spinning) return;
+  spinning = true; spinBtn.disabled = true; ensureAudio();
+  rotation = p.endRot;
   const duration = reduceMotion ? 400 : 5000;
-  rotation = endRot;
-
   const labels = rotor.querySelectorAll(".lbl");
   const transition = `transform ${duration}ms cubic-bezier(${SPIN_BEZIER.join(",")})`;
   rotor.style.transition = "none"; labels.forEach(l => l.style.transition = "none");
   void rotor.getBoundingClientRect();
-  rotor.style.transition = transition; rotor.style.transform = `rotate(${endRot}deg)`;
-  labels.forEach(l => { l.style.transition = transition; l.style.transform = `rotate(${-endRot}deg)`; });
-
-  scheduleTicks(startRot, endRot, duration);
-
+  rotor.style.transition = transition; rotor.style.transform = `rotate(${p.endRot}deg)`;
+  labels.forEach(l => { l.style.transition = transition; l.style.transform = `rotate(${-p.endRot}deg)`; });
+  scheduleTicks(p.startRot, p.endRot, duration);
   let done = false;
   const finish = () => {
     if (done) return; done = true;
     rotor.removeEventListener("transitionend", finish);
-    clearTimeout(fallback);
+    clearTimeout(fb);
     rotor.style.transition = "none"; labels.forEach(l => l.style.transition = "none");
-    finishSpin();
+    finishSpin(p);
   };
   rotor.addEventListener("transitionend", finish);
-  const fallback = setTimeout(finish, duration + 250);
+  const fb = setTimeout(finish, duration + 250);
 }
-function finishSpin() {
-  spinning = false; spinBtn.disabled = false;
-  currentCat = landedIndexFor(rotation);
+function finishSpin(p) {
+  spinning = false;
+  currentCat = p.catIndex;
   chime();
-  if (!reduceMotion) burstConfetti(CATEGORIES[currentCat].color);
-  showCard(currentCat);
+  if (!reduceMotion) burstConfetti(CATEGORIES[p.catIndex].color);
+  showCard(p.catIndex, p.qText);
+}
+// The Spin button — only the controller spins; in online it shares the params.
+function onSpinClick() {
+  if (!iAmController() || spinning) return;
+  const p = computeSpin();
+  if (online) Net.send({ t: "wheel", sub: "spin", p });
+  animateSpin(p);
 }
 
 /* ============================================================
    Wheel session (open / card / actions)
    ============================================================ */
+let wheelController = 0;
+function iAmController() { return !online || myIndex === wheelController; }
+function applyWheelControlUI() {
+  const ctrl = iAmController();
+  spinBtn.style.display = ctrl ? "" : "none";
+  spinBtn.disabled = !ctrl || spinning;
+  wheelWait.style.display = ctrl ? "none" : "";
+  wheelWait.textContent = ctrl ? "" : ("Waiting for " + pname(wheelController) + " to spin…");
+  const lock = online && !ctrl;
+  cardPassBtn.disabled = lock; cardAnotherBtn.disabled = lock; cardThirdBtn.disabled = lock;
+  wheelBack.style.visibility = (wheelMode === "game" && lock) ? "hidden" : "";
+}
 function openWheel(opts) {
   opts = opts || {};
   wheelMode = opts.mode || "solo";
   gameAnswerer = opts.answerer || null;
   gameBanner = opts.banner || null;
   gameOnDone = opts.onDone || null;
+  wheelController = (opts.controller != null) ? opts.controller : myIndex;
 
   cardOverlay.classList.remove("show");
   if (gameBanner) { wheelBanner.textContent = gameBanner; wheelBanner.style.display = ""; }
   else { wheelBanner.textContent = ""; wheelBanner.style.display = "none"; }
   wheelBack.textContent = wheelMode === "solo" ? "‹ Home" : "‹ Skip question";
-  spinBtn.disabled = false;
+  applyWheelControlUI();
   wheelOverlay.classList.add("show");
   ensureAudio();
-  setTimeout(() => spinBtn.focus(), 200);
+  if (iAmController()) setTimeout(() => spinBtn.focus(), 200);
 }
 function closeWheel() { wheelOverlay.classList.remove("show"); }
 
@@ -963,27 +1197,53 @@ function advanceTurnLine() {
   turnLine.textContent = (turnIndex % 2 === 0) ? "You answer first" : "Your partner answers first";
   turnIndex++;
 }
-function showCard(catIndex) {
+function showCard(catIndex, qText) {
   const cat = CATEGORIES[catIndex];
   catEmoji.textContent = cat.emoji;
   catName.textContent = cat.name;
   spiceMeter.hidden = (cat.name !== "Hot & Spicy");
   if (wheelMode === "solo") { advanceTurnLine(); cardThirdBtn.textContent = "🎡 Spin again"; }
   else { turnLine.textContent = gameAnswerer; cardThirdBtn.textContent = "✓ Back to game"; }
-  setQuestion(nextQuestion(catIndex));
+  setQuestion(qText);
+  applyWheelControlUI();
   cardOverlay.classList.add("show");
-  setTimeout(() => cardThirdBtn.focus(), 120);
+  if (iAmController()) setTimeout(() => cardThirdBtn.focus(), 120);
 }
 function setQuestion(text) {
   questionText.textContent = text;
   questionText.classList.remove("swap"); void questionText.offsetWidth; questionText.classList.add("swap");
 }
-function drawAnother() {
-  if (currentCat === null) return;
+function onAnother() {
+  if (!iAmController() || currentCat === null) return;
   if (wheelMode === "solo") advanceTurnLine();
-  setQuestion(nextQuestion(currentCat));
+  const q = nextQuestion(currentCat);
+  if (online) Net.send({ t: "wheel", sub: "q", q });
+  setQuestion(q);
+}
+function onCardThird() {
+  if (wheelMode === "solo") { closeCard(); setTimeout(() => animateSpin(computeSpin()), reduceMotion ? 60 : 260); return; }
+  if (!iAmController()) return;
+  if (online) Net.send({ t: "wheel", sub: "done" });
+  resumeFromWheel();
+}
+function resumeFromWheel() {
+  closeCard(); closeWheel();
+  const cb = gameOnDone; gameOnDone = null; if (cb) cb();
 }
 function closeCard() { cardOverlay.classList.remove("show"); }
+
+// Mirror the controller's wheel events on the watching peer.
+function onRemoteWheel(d) {
+  if (d.sub === "open") {
+    openWheel({ mode: "game", answerer: pname(d.receiver) + " answers 💬", banner: d.banner, onDone: null, controller: d.controller });
+  } else if (d.sub === "spin") {
+    animateSpin(d.p);
+  } else if (d.sub === "q") {
+    setQuestion(d.q);
+  } else if (d.sub === "done") {
+    resumeFromWheel();
+  }
+}
 
 /* ============================================================
    Confetti
@@ -1037,10 +1297,26 @@ function setControls(buttons) {
 function turnBadge(i) {
   return `<span class="pill" style="background:${players[i].color}"><span class="pname">${escapeHTML(pname(i))}</span></span>`;
 }
+// Online-only hint showing whether it's this device's turn.
+function turnHint(t) {
+  if (!online) return "";
+  return t === myIndex ? ` · <span class="turn-hint mine">your turn</span>` : ` · <span class="turn-hint theirs">their turn</span>`;
+}
 
-/* Trigger the wheel from a game. receiver = player index who answers. */
-function triggerSpin(receiver, banner, onDone) {
-  openWheel({ mode: "game", answerer: pname(receiver) + " answers 💬", banner, onDone });
+/* Trigger the wheel from a game. receiver = player index who answers,
+   controller (the spinner) = the other player. In the deterministic games
+   both peers reach this independently, so broadcastOpen stays false; Battleship
+   fires it from one side, so it passes broadcastOpen=true. */
+function triggerSpin(receiver, banner, onDone, broadcastOpen) {
+  const controller = 1 - receiver;
+  openWheel({ mode: "game", answerer: pname(receiver) + " answers 💬", banner, onDone, controller });
+  if (online && broadcastOpen && myIndex === controller) Net.send({ t: "wheel", sub: "open", receiver, banner, controller });
+}
+
+/* Run a control action (restart / next round) and, online, mirror it. */
+function doCtrl(action, fn) {
+  if (online) Net.send({ t: "ctrl", g: activeGame, a: action });
+  fn();
 }
 
 /* ---------- Pass the phone ---------- */
@@ -1056,10 +1332,10 @@ function showPass(toIdx, msg) {
 passReadyBtn.addEventListener("click", () => { passOverlay.classList.remove("show"); const cb = passCb; passCb = null; if (cb) cb(); });
 
 const GAMES = {
-  ttt:        { title: "Tic-Tac-Toe", emoji: "⭕", desc: "Win a round → loser answers", init: () => TTT.init() },
-  c4:         { title: "Connect Four", emoji: "🔴", desc: "Connect 4 → loser answers", init: () => C4.init() },
-  checkers:   { title: "Checkers", emoji: "⚪", desc: "Capture a piece → they answer", init: () => CK.init() },
-  battleship: { title: "Battleship", emoji: "🚢", desc: "Land a hit → they answer", init: () => BS.init() }
+  ttt:        { title: "Tic-Tac-Toe", emoji: "⭕", desc: "Win a round → loser answers", init: () => TTT.init(), net: d => TTT.net(d), ctrl: a => TTT.ctrl(a) },
+  c4:         { title: "Connect Four", emoji: "🔴", desc: "Connect 4 → loser answers", init: () => C4.init(), net: d => C4.net(d), ctrl: a => C4.ctrl(a) },
+  checkers:   { title: "Checkers", emoji: "⚪", desc: "Capture a piece → they answer", init: () => CK.init(), net: d => CK.net(d), ctrl: a => CK.ctrl(a) },
+  battleship: { title: "Battleship", emoji: "🚢", desc: "Land a hit → they answer", init: () => BS.init(), net: d => BS.net(d), ctrl: () => {} }
 };
 
 function buildGameMenu() {
@@ -1085,38 +1361,46 @@ function startGame(key) {
    ============================================================ */
 const TTT = (() => {
   const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  let board, turn, scores, starter, busy;
+  let board, turn, scores, starter, busy, lastWin;
   function init() { scores = [0, 0]; starter = 0; newRound(); }
-  function newRound() { board = Array(9).fill(-1); turn = starter; busy = false; render(); status(); controls(); }
-  function status() { setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">to move</span><div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`); }
-  function controls() { setControls([{ label: "↺ Restart match", onClick: init }]); }
+  function newRound() { board = Array(9).fill(-1); turn = starter; busy = false; lastWin = null; render(); status(); controls(); }
+  function scoreLine() { return `<div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`; }
+  function status() { setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">to move</span>${turnHint(turn)}${scoreLine()}`); }
+  function controls() { setControls([{ label: "↺ Restart match", onClick: () => doCtrl("restart", init) }]); }
   function mark(p) { return `<span style="color:${players[p].color}">${p === 0 ? "✕" : "◯"}</span>`; }
-  function render(winLine) {
+  function render() {
     gameBoardEl.className = "game-board";
     gameBoardEl.innerHTML = `<div class="ttt">` + board.map((v, i) =>
-      `<button class="ttt-cell${winLine && winLine.includes(i) ? " win" : ""}" data-i="${i}" ${v >= 0 ? "disabled" : ""}>${v >= 0 ? mark(v) : ""}</button>`).join("") + `</div>`;
+      `<button class="ttt-cell${lastWin && lastWin.includes(i) ? " win" : ""}" data-i="${i}" ${v >= 0 ? "disabled" : ""}>${v >= 0 ? mark(v) : ""}</button>`).join("") + `</div>`;
     gameBoardEl.querySelector(".ttt").onclick = e => { const b = e.target.closest(".ttt-cell"); if (b) onCell(+b.dataset.i); };
   }
   function winnerLine() { for (const L of LINES) { const [a, b, c] = L; if (board[a] >= 0 && board[a] === board[b] && board[b] === board[c]) return L; } return null; }
   function onCell(i) {
     if (busy || board[i] >= 0) return;
+    if (online && turn !== myIndex) return;
+    apply(i);
+    if (online) Net.send({ t: "mv", g: "ttt", i });
+  }
+  function apply(i) {
+    if (busy || board[i] >= 0) return;
     board[i] = turn;
     const L = winnerLine();
     if (L) {
-      busy = true; render(L);
-      const winner = turn, loser = 1 - turn; scores[winner]++;
-      status();
+      busy = true; lastWin = L; render();
+      const winner = turn, loser = 1 - turn; scores[winner]++; status();
       setTimeout(() => triggerSpin(loser, `${pname(winner)} won the round! 🎉 Spin to quiz ${pname(loser)}.`, () => { starter = 1 - starter; newRound(); }), 700);
       return;
     }
     if (board.every(v => v >= 0)) {
-      render(); setStatus(`It's a draw! 🤝<div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`);
-      setControls([{ label: "Next round", primary: true, onClick: () => { starter = 1 - starter; newRound(); } }, { label: "↺ Restart match", onClick: init }]);
+      render(); setStatus(`It's a draw! 🤝${scoreLine()}`);
+      setControls([{ label: "Next round", primary: true, onClick: () => doCtrl("next", () => { starter = 1 - starter; newRound(); }) }, { label: "↺ Restart match", onClick: () => doCtrl("restart", init) }]);
       return;
     }
     turn = 1 - turn; render(); status();
   }
-  return { init };
+  function net(d) { apply(d.i); }
+  function ctrl(a) { if (a === "restart") init(); else if (a === "next") { starter = 1 - starter; newRound(); } }
+  return { init, net, ctrl };
 })();
 
 /* ============================================================
@@ -1124,41 +1408,49 @@ const TTT = (() => {
    ============================================================ */
 const C4 = (() => {
   const ROWS = 6, COLS = 7;
-  let board, turn, scores, starter, busy;
+  let board, turn, scores, starter, busy, last;
   function init() { scores = [0, 0]; starter = 0; newRound(); }
-  function newRound() { board = Array.from({ length: ROWS }, () => Array(COLS).fill(-1)); turn = starter; busy = false; render(); status(); controls(); }
-  function status() { setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">drop a disc</span><div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`); }
-  function controls() { setControls([{ label: "↺ Restart match", onClick: init }]); }
-  function render(lastDrop) {
+  function newRound() { board = Array.from({ length: ROWS }, () => Array(COLS).fill(-1)); turn = starter; busy = false; last = null; render(); status(); controls(); }
+  function scoreLine() { return `<div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`; }
+  function status() { setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">drop a disc</span>${turnHint(turn)}${scoreLine()}`); }
+  function controls() { setControls([{ label: "↺ Restart match", onClick: () => doCtrl("restart", init) }]); }
+  function render() {
     gameBoardEl.className = "game-board";
     let html = `<div class="c4">`;
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
       const v = board[r][c];
-      const isNew = lastDrop && lastDrop.r === r && lastDrop.c === c;
+      const isNew = last && last.r === r && last.c === c;
       html += `<div class="c4-cell" data-c="${c}">${v >= 0 ? `<div class="disc" style="background:${players[v].raw || players[v].color};${isNew ? "" : "animation:none;transform:translateY(0)"}"></div>` : ""}</div>`;
     }
     html += `</div>`;
     gameBoardEl.innerHTML = html;
-    gameBoardEl.querySelector(".c4").onclick = e => { const cell = e.target.closest(".c4-cell"); if (cell) drop(+cell.dataset.c); };
+    gameBoardEl.querySelector(".c4").onclick = e => { const cell = e.target.closest(".c4-cell"); if (cell) onDrop(+cell.dataset.c); };
   }
-  function drop(c) {
+  function onDrop(c) {
     if (busy) return;
-    let r = -1;
-    for (let row = ROWS - 1; row >= 0; row--) if (board[row][c] < 0) { r = row; break; }
+    if (online && turn !== myIndex) return;
+    let r = -1; for (let row = ROWS - 1; row >= 0; row--) if (board[row][c] < 0) { r = row; break; }
     if (r < 0) return;
-    board[r][c] = turn;
+    apply(c);
+    if (online) Net.send({ t: "mv", g: "c4", c });
+  }
+  function apply(c) {
+    if (busy) return;
+    let r = -1; for (let row = ROWS - 1; row >= 0; row--) if (board[row][c] < 0) { r = row; break; }
+    if (r < 0) return;
+    board[r][c] = turn; last = { r, c };
     if (won(r, c)) {
-      busy = true; render({ r, c });
+      busy = true; render();
       const winner = turn, loser = 1 - turn; scores[winner]++; status();
       setTimeout(() => triggerSpin(loser, `${pname(winner)} connected four! 🎉 Spin to quiz ${pname(loser)}.`, () => { starter = 1 - starter; newRound(); }), 700);
       return;
     }
     if (board.every(row => row.every(v => v >= 0))) {
-      render({ r, c }); setStatus(`Board full — it's a draw! 🤝<div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${scores[0]}</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${scores[1]}</span></div>`);
-      setControls([{ label: "Next round", primary: true, onClick: () => { starter = 1 - starter; newRound(); } }, { label: "↺ Restart match", onClick: init }]);
+      render(); setStatus(`Board full — it's a draw! 🤝${scoreLine()}`);
+      setControls([{ label: "Next round", primary: true, onClick: () => doCtrl("next", () => { starter = 1 - starter; newRound(); }) }, { label: "↺ Restart match", onClick: () => doCtrl("restart", init) }]);
       return;
     }
-    turn = 1 - turn; render({ r, c }); status();
+    turn = 1 - turn; render(); status();
   }
   function won(r, c) {
     const p = board[r][c];
@@ -1173,7 +1465,9 @@ const C4 = (() => {
     }
     return false;
   }
-  return { init };
+  function net(d) { apply(d.c); }
+  function ctrl(a) { if (a === "restart") init(); else if (a === "next") { starter = 1 - starter; newRound(); } }
+  return { init, net, ctrl };
 })();
 
 /* ============================================================
@@ -1193,10 +1487,10 @@ const CK = (() => {
     turn = 0; sel = null; chain = false; capThisTurn = 0; busy = false; over = false;
     render(); status(); controls();
   }
-  function controls() { setControls([{ label: "↺ Restart", onClick: init }]); }
+  function controls() { setControls([{ label: "↺ Restart", onClick: () => doCtrl("restart", init) }]); }
   function status() {
     if (over) return;
-    setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">to move</span><div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${count(0)} left</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${count(1)} left</span></div>`);
+    setStatus(`${turnBadge(turn)} &nbsp;<span style="font-weight:600">to move</span>${turnHint(turn)}<div class="scores"><span style="color:${players[0].color}">${escapeHTML(pname(0))}: ${count(0)} left</span><span style="color:${players[1].color}">${escapeHTML(pname(1))}: ${count(1)} left</span></div>`);
   }
   function count(p) { let n = 0; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (board[r][c] && board[r][c].p === p) n++; return n; }
   function dirs(piece) { return piece.k ? [[1,-1],[1,1],[-1,-1],[-1,1]] : (piece.p === 0 ? [[1,-1],[1,1]] : [[-1,-1],[-1,1]]); }
@@ -1240,118 +1534,129 @@ const CK = (() => {
   }
   function onSquare(r, c) {
     if (busy || over) return;
+    if (online && turn !== myIndex) return;
     const cell = board[r][c];
     if (!chain && cell && cell.p === turn) { sel = { r, c }; render(); return; }
     if (!sel) return;
     const mv = legalDests(sel.r, sel.c).find(m => m.r === r && m.c === c);
     if (!mv) { if (!chain && cell && cell.p === turn) { sel = { r, c }; render(); } return; }
-    // execute move
-    const piece = board[sel.r][sel.c];
-    board[r][c] = piece; board[sel.r][sel.c] = null;
+    commitMove({ r: sel.r, c: sel.c }, { r, c });
+  }
+  function commitMove(from, to) {
+    if (online) Net.send({ t: "mv", g: "ck", from, to });
+    applyMove(from, to);
+  }
+  function applyMove(from, to) {
+    const piece = board[from.r][from.c]; if (!piece) return;
+    const all = movesFor(from.r, from.c);
+    const mv = all.jumps.concat(all.simple).find(m => m.r === to.r && m.c === to.c);
+    if (!mv) return;
+    board[to.r][to.c] = piece; board[from.r][from.c] = null;
     if (mv.cap) { board[mv.cap.r][mv.cap.c] = null; capThisTurn++; }
     let kinged = false;
-    if (!piece.k && ((piece.p === 0 && r === 7) || (piece.p === 1 && r === 0))) { piece.k = true; kinged = true; }
-    sel = { r, c };
-    if (mv.cap && !kinged) {
-      const more = movesFor(r, c).jumps;
-      if (more.length) { chain = true; render(); return; }
-    }
+    if (!piece.k && ((piece.p === 0 && to.r === 7) || (piece.p === 1 && to.r === 0))) { piece.k = true; kinged = true; }
+    if (mv.cap && !kinged && movesFor(to.r, to.c).jumps.length) { sel = { r: to.r, c: to.c }; chain = true; render(); return; }
     const caps = capThisTurn;
     sel = null; chain = false; capThisTurn = 0;
     endTurn(caps);
   }
+  function net(d) { applyMove(d.from, d.to); }
+  function ctrl(a) { if (a === "restart") init(); }
   function endTurn(caps) {
     const mover = turn, opp = 1 - turn;
     turn = opp;
-    render();
+    render(); status();
     const oppDead = count(opp) === 0 || !hasAnyMove(opp);
-    const finishUp = () => { if (oppDead) gameOver(mover); else { render(); status(); } };
+    const finishUp = () => { if (oppDead) gameOver(mover); else { busy = false; render(); status(); } };
     if (caps > 0) {
       const banner = oppDead
         ? `${pname(mover)} wins! 🏆 One last question for ${pname(opp)}.`
         : `${pname(mover)} captured a piece! Spin to quiz ${pname(opp)}.`;
       busy = true;
-      triggerSpin(opp, banner, () => { busy = false; finishUp(); });
+      triggerSpin(opp, banner, finishUp);
     } else if (oppDead) {
       busy = true;
-      triggerSpin(opp, `${pname(mover)} wins! 🏆 One last question for ${pname(opp)}.`, () => { busy = false; gameOver(mover); });
+      triggerSpin(opp, `${pname(mover)} wins! 🏆 One last question for ${pname(opp)}.`, () => gameOver(mover));
     } else { status(); }
   }
   function gameOver(winner) {
-    over = true;
+    over = true; busy = false;
     setStatus(`🏆 ${turnBadge(winner)} <span style="font-weight:700">wins the game!</span>`);
     if (!reduceMotion) burstConfetti(players[winner].raw);
-    setControls([{ label: "Play again", primary: true, onClick: init }]);
+    setControls([{ label: "Play again", primary: true, onClick: () => doCtrl("restart", init) }]);
   }
-  return { init };
+  return { init, net, ctrl };
 })();
 
 /* ============================================================
    GAME: Battleship (hit -> hit player answers)
    ============================================================ */
 const BS = (() => {
-  // Russian "Морской бой" fleet: 1×4, 2×3, 3×2, 4×1 — and ships may not touch,
-  // even diagonally (enforced in placement below).
+  // Russian "Морской бой" fleet: 1×4, 2×3, 3×2, 4×1 — ships may not touch.
   const SIZE = 10, SHIPS = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1];
-  let grids, phase, setupIdx, current, winner, busy;
-
-  function newGrid() { return { occ: {}, ships: [], marks: {} }; } // occ: cell->shipIdx, marks: cell->'hit'|'miss'
   function key(r, c) { return r * SIZE + c; }
-  function init() {
-    grids = [newGrid(), newGrid()];
-    randomize(0); randomize(1);
-    phase = "setup"; setupIdx = 0; current = 0; winner = null; busy = false;
-    renderSetup();
-  }
-  // Place the whole fleet; if a ship can't fit (no-touch gets tight), restart the grid.
-  function randomize(p) {
+
+  // Build a full valid fleet; restart the grid if a no-touch fit fails.
+  function makeFleet() {
     for (let attempt = 0; attempt < 400; attempt++) {
-      const g = newGrid();
-      let allPlaced = true;
+      const g = { occ: {}, ships: [], marks: {} };
+      let all = true;
       for (let s = 0; s < SHIPS.length; s++) {
         const len = SHIPS[s]; let placed = false, tries = 0;
         while (!placed && tries++ < 400) {
           const horiz = Math.random() < 0.5;
           const r = Math.floor(Math.random() * (horiz ? SIZE : SIZE - len + 1));
           const c = Math.floor(Math.random() * (horiz ? SIZE - len + 1 : SIZE));
-          const cells = [];
-          let ok = true;
+          const cells = []; let ok = true;
           for (let i = 0; i < len; i++) {
             const rr = horiz ? r : r + i, cc = horiz ? c + i : c;
-            // reject if the cell or any of its 8 neighbours already holds a ship (no touching)
             for (let dr = -1; dr <= 1 && ok; dr++) for (let dc = -1; dc <= 1; dc++) {
               const nr = rr + dr, nc = cc + dc;
               if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && g.occ[key(nr, nc)] !== undefined) { ok = false; break; }
             }
-            if (!ok) break;
-            cells.push(key(rr, cc));
+            if (!ok) break; cells.push(key(rr, cc));
           }
           if (!ok) continue;
           const idx = g.ships.length; g.ships.push({ cells, hits: 0, len });
-          cells.forEach(k => g.occ[k] = idx);
-          placed = true;
+          cells.forEach(k => g.occ[k] = idx); placed = true;
         }
-        if (!placed) { allPlaced = false; break; }
+        if (!placed) { all = false; break; }
       }
-      if (allPlaced) { grids[p] = g; return; }
+      if (all) return g;
     }
+    return { occ: {}, ships: [], marks: {} };
   }
+  const FLEET_LABEL = "1×4 · 2×3 · 3×2 · 4×1";
 
-  /* ----- Setup ----- */
+  /* ===== shared state ===== */
+  let phase, current, winner, busy;
+  /* local-only */
+  let grids, setupIdx;
+  /* online-only */
+  let mine, oppMarks, oppSunk, iReady, oppReady, pendingFire;
+
+  function init() { if (online) initOnline(); else initLocal(); }
+
+  /* ========================================================
+     LOCAL (one phone, pass it back and forth)
+     ======================================================== */
+  function initLocal() {
+    grids = [makeFleet(), makeFleet()];
+    phase = "setup"; setupIdx = 0; current = 0; winner = null; busy = false;
+    renderSetup();
+  }
+  function shipsSunk(p) { return grids[p].ships.filter(s => s.hits >= s.len).length; }
   function renderSetup() {
     const p = setupIdx;
-    gameNameEl.textContent = "🚢  Battleship";
     setStatus(`${turnBadge(p)} <span style="font-weight:600">— arrange your fleet</span>`);
     const g = grids[p];
     let html = `<div class="bs-wrap"><div class="bs-grid">`;
-    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
-      const isShip = g.occ[key(r, c)] !== undefined;
-      html += `<div class="bs-cell${isShip ? " ship" : ""}"></div>`;
-    }
-    html += `</div><p class="bs-fleet">Ships: ${SHIPS.map(s => "▤".repeat(s)).join("  ")}</p></div>`;
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++)
+      html += `<div class="bs-cell${g.occ[key(r, c)] !== undefined ? " ship" : ""}"></div>`;
+    html += `</div><p class="bs-fleet">Fleet: ${FLEET_LABEL}</p></div>`;
     gameBoardEl.className = "game-board"; gameBoardEl.innerHTML = html;
     setControls([
-      { label: "🎲 Randomize", onClick: () => { randomize(p); renderSetup(); } },
+      { label: "🎲 Randomize", onClick: () => { grids[p] = makeFleet(); renderSetup(); } },
       { label: "✓ Ready", primary: true, onClick: readySetup }
     ]);
   }
@@ -1364,19 +1669,13 @@ const BS = (() => {
       phase = "battle"; current = 0; renderBattle();
     }
   }
-
-  /* ----- Battle ----- */
-  function shipsSunk(p) { return grids[p].ships.filter(s => s.hits >= s.len).length; }
   function renderBattle() {
-    const opp = 1 - current;
-    const g = grids[opp];
-    gameNameEl.textContent = "🚢  Battleship";
+    const opp = 1 - current, g = grids[opp];
     setStatus(`${turnBadge(current)} <span style="font-weight:600">— fire at ${escapeHTML(pname(opp))}'s waters</span><div class="scores"><span>You've sunk ${shipsSunk(opp)} / ${SHIPS.length}</span></div>`);
     let html = `<div class="bs-wrap"><div class="bs-grid">`;
     for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
       const m = g.marks[key(r, c)];
-      const cls = m === "hit" ? "hit" : m === "miss" ? "miss" : "fire";
-      html += `<div class="bs-cell ${cls}" data-r="${r}" data-c="${c}"></div>`;
+      html += `<div class="bs-cell ${m === "hit" ? "hit" : m === "miss" ? "miss" : "fire"}" data-r="${r}" data-c="${c}"></div>`;
     }
     html += `</div></div>`;
     gameBoardEl.className = "game-board"; gameBoardEl.innerHTML = html;
@@ -1386,16 +1685,15 @@ const BS = (() => {
   function fire(r, c) {
     if (busy || phase !== "battle") return;
     const opp = 1 - current, g = grids[opp], k = key(r, c);
-    if (g.marks[k]) return; // already fired here
+    if (g.marks[k]) return;
     const shipIdx = g.occ[k];
     if (shipIdx !== undefined) {
       g.marks[k] = "hit"; g.ships[shipIdx].hits++;
       const sunk = g.ships[shipIdx].hits >= g.ships[shipIdx].len;
       renderBattle();
-      if (grids[opp].ships.every(s => s.hits >= s.len)) { winner = current; return gameOver(); }
-      const verb = sunk ? `sank a ship` : `scored a hit`;
+      if (g.ships.every(s => s.hits >= s.len)) { winner = current; return gameOver(); }
       busy = true;
-      triggerSpin(opp, `${pname(current)} ${verb} on ${pname(opp)}! 💥 Spin to quiz ${pname(opp)}.`, () => { busy = false; nextTurn(); });
+      triggerSpin(opp, `${pname(current)} ${sunk ? "sank a ship" : "scored a hit"} on ${pname(opp)}! 💥 Spin to quiz ${pname(opp)}.`, () => { busy = false; nextTurn(); });
     } else {
       g.marks[k] = "miss"; renderBattle();
       setStatus(`💧 Splash — miss!`);
@@ -1408,41 +1706,140 @@ const BS = (() => {
     phase = "over";
     setStatus(`🏆 ${turnBadge(winner)} <span style="font-weight:700">sank the whole fleet!</span>`);
     if (!reduceMotion) burstConfetti(players[winner].raw);
-    const loser = 1 - winner;
-    setControls([
-      { label: "Play again", primary: true, onClick: init }
-    ]);
-    setTimeout(() => triggerSpin(loser, `${pname(winner)} won Battleship! 🎉 One last question for ${pname(loser)}.`, () => {}), 800);
+    setControls([{ label: "Play again", primary: true, onClick: init }]);
+    setTimeout(() => triggerSpin(1 - winner, `${pname(winner)} won Battleship! 🎉 One last question for ${pname(1 - winner)}.`, () => {}), 800);
   }
-  return { init };
+
+  /* ========================================================
+     ONLINE (two devices, fleets stay private)
+     ======================================================== */
+  function initOnline() {
+    mine = makeFleet(); oppMarks = {}; oppSunk = 0;
+    iReady = false; oppReady = false; pendingFire = false;
+    phase = "setup"; current = 0; winner = null; busy = false;
+    renderSetupOnline();
+  }
+  function renderSetupOnline() {
+    let html = `<div class="bs-wrap"><div class="bs-board-label">🚢 Your fleet</div><div class="bs-grid mine">`;
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++)
+      html += `<div class="bs-cell${mine.occ[key(r, c)] !== undefined ? " ship" : ""}"></div>`;
+    html += `</div><p class="bs-fleet">Fleet: ${FLEET_LABEL}</p></div>`;
+    gameBoardEl.className = "game-board"; gameBoardEl.innerHTML = html;
+    if (iReady) {
+      setStatus(`<span style="font-weight:700">Ready! Waiting for ${escapeHTML(pname(1 - myIndex))}…</span>`);
+      setControls([]);
+    } else {
+      setStatus(`${turnBadge(myIndex)} <span style="font-weight:600">— arrange your fleet</span>`);
+      setControls([
+        { label: "🎲 Randomize", onClick: () => { mine = makeFleet(); renderSetupOnline(); } },
+        { label: "✓ Ready", primary: true, onClick: readyOnline }
+      ]);
+    }
+  }
+  function readyOnline() {
+    iReady = true; Net.send({ t: "bs", sub: "ready" });
+    if (oppReady) startBattleOnline(); else renderSetupOnline();
+  }
+  function startBattleOnline() { phase = "battle"; current = 0; renderBattleOnline(); }
+  function shipsSunkMine() { return mine.ships.filter(s => s.hits >= s.len).length; }
+  function renderBattleOnline() {
+    const opp = 1 - myIndex, myTurn = current === myIndex;
+    setStatus(`<span class="turn-hint ${myTurn ? "mine" : "theirs"}">${myTurn ? "Your turn — fire!" : "Waiting for " + escapeHTML(pname(opp)) + "…"}</span><div class="scores"><span>You sank ${oppSunk}/${SHIPS.length}</span><span>${escapeHTML(pname(opp))} sank ${shipsSunkMine()}/${SHIPS.length}</span></div>`);
+    let html = `<div class="bs-wrap"><div class="bs-board-label">🎯 ${escapeHTML(pname(opp))}'s waters</div><div class="bs-grid enemy">`;
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+      const m = oppMarks[key(r, c)];
+      html += `<div class="bs-cell ${m === "hit" ? "hit" : m === "miss" ? "miss" : (myTurn ? "fire" : "")}" data-r="${r}" data-c="${c}"></div>`;
+    }
+    html += `</div><div class="bs-board-label">🚢 Your fleet</div><div class="bs-grid mine small">`;
+    for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+      const ship = mine.occ[key(r, c)] !== undefined, m = mine.marks[key(r, c)];
+      html += `<div class="bs-cell ${m === "hit" ? "hit" : m === "miss" ? "miss" : (ship ? "ship" : "")}"></div>`;
+    }
+    html += `</div></div>`;
+    gameBoardEl.className = "game-board"; gameBoardEl.innerHTML = html;
+    if (myTurn && !pendingFire && phase === "battle") {
+      const enemy = gameBoardEl.querySelector(".bs-grid.enemy");
+      enemy.onclick = e => { const cell = e.target.closest(".bs-cell"); if (cell && cell.dataset.r !== undefined) fireOnline(+cell.dataset.r, +cell.dataset.c); };
+    }
+    setControls([{ label: "↺ New game", onClick: () => { Net.send({ t: "bs", sub: "rematch" }); initOnline(); } }]);
+  }
+  function fireOnline(r, c) {
+    if (phase !== "battle" || current !== myIndex || pendingFire) return;
+    if (oppMarks[key(r, c)]) return;
+    pendingFire = true;
+    Net.send({ t: "bs", sub: "fire", r, c });
+  }
+  function gameOverOnline() {
+    phase = "over";
+    const iWon = winner === myIndex;
+    setStatus(`${iWon ? "🏆" : "💧"} <span style="font-weight:700">${iWon ? "You sank the whole fleet!" : escapeHTML(pname(winner)) + " sank your fleet."}</span>`);
+    if (iWon && !reduceMotion) burstConfetti(players[myIndex].raw);
+    setControls([{ label: "Play again", primary: true, onClick: () => { Net.send({ t: "bs", sub: "rematch" }); initOnline(); } }]);
+    if (myIndex === winner) {
+      setTimeout(() => triggerSpin(1 - winner, `${pname(winner)} won Battleship! 🎉 One last question for ${pname(1 - winner)}.`, () => {}, true), 800);
+    }
+  }
+  function net(d) {
+    if (d.sub === "ready") {
+      oppReady = true;
+      if (phase === "setup") { if (iReady) startBattleOnline(); else renderSetupOnline(); }
+      return;
+    }
+    if (d.sub === "rematch") { initOnline(); return; }
+    if (d.sub === "fire") { // I am the defender
+      const k = key(d.r, d.c);
+      if (mine.marks[k]) return;
+      const idx = mine.occ[k];
+      let res = "miss", sunk = false, win = false;
+      if (idx !== undefined) {
+        mine.marks[k] = "hit"; mine.ships[idx].hits++;
+        res = "hit"; sunk = mine.ships[idx].hits >= mine.ships[idx].len;
+        win = mine.ships.every(s => s.hits >= s.len);
+      } else { mine.marks[k] = "miss"; }
+      Net.send({ t: "bs", sub: "result", r: d.r, c: d.c, res, sunk, win });
+      current = myIndex; // the shot is over; my turn next
+      if (win) { winner = 1 - myIndex; renderBattleOnline(); gameOverOnline(); }
+      else renderBattleOnline();
+      return;
+    }
+    if (d.sub === "result") { // I am the attacker
+      oppMarks[key(d.r, d.c)] = d.res; pendingFire = false;
+      if (d.res === "hit" && d.sunk) oppSunk++;
+      current = 1 - myIndex; // turn passes to the defender
+      if (d.win) { winner = myIndex; renderBattleOnline(); gameOverOnline(); return; }
+      renderBattleOnline();
+      if (d.res === "hit") {
+        triggerSpin(1 - myIndex, `${pname(myIndex)} ${d.sunk ? "sank a ship" : "scored a hit"} on ${pname(1 - myIndex)}! 💥 Spin to quiz ${pname(1 - myIndex)}.`, () => renderBattleOnline(), true);
+      }
+      return;
+    }
+  }
+  return { init, net };
 })();
 
 /* ============================================================
    Wiring
    ============================================================ */
-beginBtn.addEventListener("click", () => { introOverlay.classList.remove("show"); ensureAudio(); });
+beginBtn.addEventListener("click", () => { introOverlay.classList.remove("show"); ensureAudio(); maybeAutoJoin(); });
 
-$("goWheel").addEventListener("click", () => openWheel({ mode: "solo" }));
-$("goGames").addEventListener("click", () => showScreen("gamesScreen"));
-$("gamesBack").addEventListener("click", () => showScreen("homeScreen"));
-$("gameBack").addEventListener("click", () => showScreen("gamesScreen"));
+$("goWheel").addEventListener("click", () => { online = false; openWheel({ mode: "solo" }); });
+$("goGames").addEventListener("click", () => { resetLobby(); showScreen("gamesScreen"); });
+$("gamesBack").addEventListener("click", () => { leaveOnline(); showScreen("homeScreen"); });
+$("gameBack").addEventListener("click", () => { if (online) { Net.send({ t: "bye" }); leaveOnline(); } resetLobby(); showScreen("gamesScreen"); });
 
 $("p1name").addEventListener("input", e => { players[0].name = e.target.value.trim(); });
 $("p2name").addEventListener("input", e => { players[1].name = e.target.value.trim(); });
 
-spinBtn.addEventListener("click", spin);
+spinBtn.addEventListener("click", onSpinClick);
 
 wheelBack.addEventListener("click", () => {
   if (wheelMode === "solo") { closeWheel(); showScreen("homeScreen"); }
-  else { closeWheel(); const cb = gameOnDone; gameOnDone = null; if (cb) cb(); } // skip the question, resume game
+  else { onCardThird(); } // resume/skip the question and return to the game
 });
 
-cardPassBtn.addEventListener("click", drawAnother);
-cardAnotherBtn.addEventListener("click", drawAnother);
-cardThirdBtn.addEventListener("click", () => {
-  if (wheelMode === "solo") { closeCard(); setTimeout(spin, reduceMotion ? 60 : 260); }
-  else { closeCard(); closeWheel(); const cb = gameOnDone; gameOnDone = null; if (cb) cb(); }
-});
+cardPassBtn.addEventListener("click", onAnother);
+cardAnotherBtn.addEventListener("click", onAnother);
+cardThirdBtn.addEventListener("click", onCardThird);
 
 soundBtn.addEventListener("click", () => {
   soundOn = !soundOn;
@@ -1455,19 +1852,71 @@ soundBtn.addEventListener("click", () => {
 document.addEventListener("keydown", (e) => {
   if (e.code !== "Space" && e.code !== "Enter") return;
   if (!wheelOverlay.classList.contains("show")) return;
-  if (cardOverlay.classList.contains("show") || spinning) return;
+  if (cardOverlay.classList.contains("show") || spinning || !iAmController()) return;
   const ae = document.activeElement;
   if (ae && ["BUTTON", "A", "INPUT", "TEXTAREA", "SELECT"].includes(ae.tagName)) return;
-  e.preventDefault(); spin();
+  e.preventDefault(); onSpinClick();
 });
 
 // Escape / backdrop on the question card behaves like its third button
-cardOverlay.addEventListener("click", (e) => { if (e.target === cardOverlay) cardThirdBtn.click(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && cardOverlay.classList.contains("show")) cardThirdBtn.click(); });
+cardOverlay.addEventListener("click", (e) => { if (e.target === cardOverlay && !cardThirdBtn.disabled) onCardThird(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && cardOverlay.classList.contains("show") && !cardThirdBtn.disabled) onCardThird(); });
+
+/* ---------- Lobby wiring ---------- */
+function resetLobby() {
+  $("modeLocal").classList.add("active"); $("modeOnline").classList.remove("active");
+  $("localPanel").hidden = false; $("onlinePanel").hidden = true;
+  hideOnlineSubs();
+}
+function buildOnlineGameMenu() {
+  const m = $("onlineGameMenu"); m.innerHTML = "";
+  Object.keys(GAMES).forEach(key => {
+    const g = GAMES[key];
+    const b = document.createElement("button");
+    b.className = "game-tile";
+    b.innerHTML = `<span class="emoji">${g.emoji}</span><span class="t">${g.title}</span><span class="d">${g.desc}</span>`;
+    b.addEventListener("click", () => hostCreate(key));
+    m.appendChild(b);
+  });
+}
+function maybeAutoJoin() {
+  if ((location.hash || "").indexOf("#j=") !== 0) return;
+  resetLobby(); showScreen("gamesScreen");
+  $("modeLocal").classList.remove("active"); $("modeOnline").classList.add("active");
+  $("localPanel").hidden = true; $("onlinePanel").hidden = false;
+  showOnlineSub("joinPanel");
+  $("joinCode").value = location.hash;
+  $("joinStatus").textContent = "Enter your name, then tap Connect.";
+  setTimeout(() => $("myName").focus(), 100);
+}
+
+$("modeLocal").addEventListener("click", () => {
+  leaveOnline();
+  $("modeLocal").classList.add("active"); $("modeOnline").classList.remove("active");
+  $("localPanel").hidden = false; $("onlinePanel").hidden = true;
+});
+$("modeOnline").addEventListener("click", () => {
+  $("modeOnline").classList.add("active"); $("modeLocal").classList.remove("active");
+  $("onlinePanel").hidden = false; $("localPanel").hidden = true;
+  hideOnlineSubs();
+});
+$("createGameBtn").addEventListener("click", () => showOnlineSub("createPanel"));
+$("createBack").addEventListener("click", () => { leaveOnline(); hideOnlineSubs(); });
+$("joinGameBtn").addEventListener("click", () => { showOnlineSub("joinPanel"); $("joinStatus").textContent = ""; setTimeout(() => $("joinCode").focus(), 80); });
+$("joinBack").addEventListener("click", () => { leaveOnline(); hideOnlineSubs(); });
+$("connectBtn").addEventListener("click", () => guestConnect($("joinCode").value));
+$("cancelHost").addEventListener("click", () => { leaveOnline(); hideOnlineSubs(); });
+$("copyLink").addEventListener("click", () => {
+  const v = $("shareLink").value;
+  const ok = () => showToast("Link copied — send it to your partner!");
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(ok, () => { $("shareLink").select(); ok(); });
+  else { $("shareLink").select(); try { document.execCommand("copy"); } catch (e) {} ok(); }
+});
 
 /* ---------- Init ---------- */
 buildWheel();
 buildGameMenu();
+buildOnlineGameMenu();
 introOverlay.classList.add("show");
 setTimeout(() => beginBtn.focus(), 200);
 </script>
